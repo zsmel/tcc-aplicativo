@@ -1,0 +1,327 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/white_2"
+    tools:context=".FormCadastroAdm">
+
+    <TextView
+        android:id="@+id/title_cadastro_adm"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/title_cadastro"
+        android:textSize="30sp"
+        android:textColor="@color/black"
+        android:textStyle="bold"
+        android:layout_marginTop="50dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        />
+
+    <TextView
+        android:id="@+id/text_info"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="36dp"
+        android:text="@string/info_pessoais"
+        android:textColor="@color/black"
+        android:textSize="20sp"
+        android:textStyle="normal"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.189"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/title_cadastro_adm" />
+
+    <View
+        android:id="@+id/containerComponents"
+        style="@style/ContainerComponentsCadastroAdm"
+        android:layout_marginTop="4dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.4"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/text_info" />
+
+    <TextView
+        android:id="@+id/text_name"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="@string/nome"
+        android:textColor="@color/black_2"
+        android:textSize="18sp"
+        android:textStyle="normal"
+        app:layout_constraintEnd_toEndOf="@id/containerComponents"
+        app:layout_constraintHorizontal_bias="0.087"
+        app:layout_constraintStart_toStartOf="@id/containerComponents"
+        app:layout_constraintTop_toTopOf="@id/containerComponents" />
+
+    <EditText
+        android:id="@+id/cad_name"
+        style="@style/Edit_Text"
+        android:hint="texto"
+        android:inputType="text"
+        android:layout_marginTop="30dp"
+        app:layout_constraintEnd_toEndOf="@id/text_name"
+        app:layout_constraintStart_toStartOf="@id/text_name"
+        app:layout_constraintTop_toTopOf="@id/text_name" />
+
+    <TextView
+        android:id="@+id/text_date"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="100dp"
+        android:text="@string/data"
+        android:textColor="@color/black_2"
+        android:textSize="18sp"
+        android:textStyle="normal"
+        app:layout_constraintEnd_toEndOf="@id/containerComponents"
+        app:layout_constraintHorizontal_bias="0.104"
+        app:layout_constraintStart_toStartOf="@id/containerComponents"
+        app:layout_constraintTop_toTopOf="@id/containerComponents" />
+
+    <EditText
+        android:id="@+id/cad_date"
+        style="@style/Edit_Text"
+        android:hint="dd/mm/aaaa"
+        android:inputType="date"
+        android:layout_marginTop="90dp"
+        app:layout_constraintEnd_toEndOf="@id/cad_name"
+        app:layout_constraintStart_toStartOf="@id/cad_name"
+        app:layout_constraintTop_toTopOf="@id/cad_name" />
+
+    <TextView
+        android:id="@+id/text_cpf"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="192dp"
+        android:text="@string/cpf"
+        android:textColor="@color/black_2"
+        android:textSize="18sp"
+        android:textStyle="normal"
+        app:layout_constraintEnd_toEndOf="@id/containerComponents"
+        app:layout_constraintHorizontal_bias="0.070"
+        app:layout_constraintStart_toStartOf="@id/containerComponents"
+        app:layout_constraintTop_toTopOf="@id/containerComponents" />
+
+    <EditText
+        android:id="@+id/cad_cpf"
+        style="@style/Edit_Text"
+        android:hint="000.000.000-00"
+        android:inputType="number"
+        android:layout_marginTop="90dp"
+        app:layout_constraintEnd_toEndOf="@id/cad_date"
+        app:layout_constraintStart_toStartOf="@id/cad_date"
+        app:layout_constraintTop_toTopOf="@id/cad_date" />
+
+    <TextView
+        android:id="@+id/text_phone"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="282dp"
+        android:text="@string/telefone"
+        android:textColor="@color/black_2"
+        android:textSize="18sp"
+        android:textStyle="normal"
+        app:layout_constraintEnd_toEndOf="@id/containerComponents"
+        app:layout_constraintHorizontal_bias="0.070"
+        app:layout_constraintStart_toStartOf="@id/containerComponents"
+        app:layout_constraintTop_toTopOf="@id/containerComponents" />
+
+    <EditText
+        android:id="@+id/cad_phone"
+        style="@style/Edit_Text"
+        android:hint="(00) 0 0000-0000"
+        android:inputType="number"
+        android:layout_marginTop="90dp"
+        app:layout_constraintEnd_toEndOf="@id/cad_cpf"
+        app:layout_constraintStart_toStartOf="@id/cad_cpf"
+        app:layout_constraintTop_toTopOf="@id/cad_cpf" />
+    <TextView
+        android:id="@+id/text_address"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="367dp"
+        android:text="@string/endereco"
+        android:textColor="@color/black_2"
+        android:textSize="18sp"
+        android:textStyle="normal"
+        app:layout_constraintEnd_toEndOf="@id/containerComponents"
+        app:layout_constraintHorizontal_bias="0.070"
+        app:layout_constraintStart_toStartOf="@id/containerComponents"
+        app:layout_constraintTop_toTopOf="@id/containerComponents" />
+
+    <EditText
+        android:id="@+id/cad_address"
+        style="@style/Edit_Text"
+        android:hint="Ex: Rua, Avenida, Alameda, etc"
+        android:inputType="text"
+        android:layout_marginTop="90dp"
+        app:layout_constraintEnd_toEndOf="@id/cad_phone"
+        app:layout_constraintStart_toStartOf="@id/cad_phone"
+        app:layout_constraintTop_toTopOf="@id/cad_phone" />
+
+    <TextView
+        android:id="@+id/text_dados"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:text="@string/dados_inst"
+        android:textColor="@color/black"
+        android:textSize="20sp"
+        android:textStyle="normal"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.189"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/cad_address" />
+
+    <TextView
+        android:id="@+id/text_instituicao"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="515dp"
+        android:text="@string/instituiçao"
+        android:textColor="@color/black_2"
+        android:textSize="18sp"
+        android:textStyle="normal"
+        app:layout_constraintEnd_toEndOf="@id/containerComponents"
+        app:layout_constraintHorizontal_bias="0.076"
+        app:layout_constraintStart_toStartOf="@id/containerComponents"
+        app:layout_constraintTop_toTopOf="@id/containerComponents" />
+
+    <EditText
+        android:id="@+id/cad_instituicao"
+        style="@style/Edit_Text"
+        android:hint="texto"
+        android:inputType="text"
+        android:layout_marginTop="27dp"
+        app:layout_constraintEnd_toEndOf="@id/text_instituicao"
+        app:layout_constraintStart_toStartOf="@id/text_instituicao"
+        app:layout_constraintTop_toTopOf="@id/text_instituicao" />
+
+    <TextView
+        android:id="@+id/text_matricula"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="605dp"
+        android:text="@string/matricula"
+        android:textColor="@color/black_2"
+        android:textSize="18sp"
+        android:textStyle="normal"
+        app:layout_constraintEnd_toEndOf="@id/containerComponents"
+        app:layout_constraintHorizontal_bias="0.076"
+        app:layout_constraintStart_toStartOf="@id/containerComponents"
+        app:layout_constraintTop_toTopOf="@id/containerComponents" />
+
+    <EditText
+        android:id="@+id/cad_matricula"
+        style="@style/Edit_Text"
+        android:hint="000000"
+        android:inputType="number"
+        android:layout_marginTop="90dp"
+        app:layout_constraintEnd_toEndOf="@id/cad_instituicao"
+        app:layout_constraintStart_toStartOf="@id/cad_instituicao"
+        app:layout_constraintTop_toTopOf="@id/cad_instituicao" />
+
+    <TextView
+        android:id="@+id/text_cargo"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="697dp"
+        android:text="@string/cargo"
+        android:textColor="@color/black_2"
+        android:textSize="18sp"
+        android:textStyle="normal"
+        app:layout_constraintEnd_toEndOf="@id/containerComponents"
+        app:layout_constraintHorizontal_bias="0.076"
+        app:layout_constraintStart_toStartOf="@id/containerComponents"
+        app:layout_constraintTop_toTopOf="@id/containerComponents" />
+
+    <EditText
+        android:id="@+id/cad_cargo"
+        style="@style/Edit_Text"
+        android:hint="texto"
+        android:inputType="text"
+        android:layout_marginTop="90dp"
+        app:layout_constraintEnd_toEndOf="@id/cad_matricula"
+        app:layout_constraintStart_toStartOf="@id/cad_matricula"
+        app:layout_constraintTop_toTopOf="@id/cad_matricula" />
+
+    <TextView
+        android:id="@+id/text_acess"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:text="@string/sistem_acess"
+        android:textColor="@color/black"
+        android:textSize="20sp"
+        android:textStyle="normal"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.189"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/cad_cargo" />
+
+    <TextView
+        android:id="@+id/text_email"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="850dp"
+        android:text="@string/text_email"
+        android:textColor="@color/black_2"
+        android:textSize="18sp"
+        android:textStyle="normal"
+        app:layout_constraintEnd_toEndOf="@id/containerComponents"
+        app:layout_constraintHorizontal_bias="0.076"
+        app:layout_constraintStart_toStartOf="@id/containerComponents"
+        app:layout_constraintTop_toTopOf="@id/containerComponents" />
+
+    <EditText
+        android:id="@+id/cad_email"
+        style="@style/Edit_Text"
+        android:hint="email@dominio.com.br"
+        android:inputType="textEmailAddress"
+        android:layout_marginTop="27dp"
+        app:layout_constraintEnd_toEndOf="@id/text_email"
+        app:layout_constraintStart_toStartOf="@id/text_email"
+        app:layout_constraintTop_toTopOf="@id/text_email" />
+
+    <TextView
+        android:id="@+id/text_senha"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="940dp"
+        android:text="@string/text_senha"
+        android:textColor="@color/black_2"
+        android:textSize="18sp"
+        android:textStyle="normal"
+        app:layout_constraintEnd_toEndOf="@id/containerComponents"
+        app:layout_constraintHorizontal_bias="0.076"
+        app:layout_constraintStart_toStartOf="@id/containerComponents"
+        app:layout_constraintTop_toTopOf="@id/containerComponents" />
+
+    <EditText
+        android:id="@+id/cad_senha"
+        style="@style/Edit_Text"
+        android:hint="texto"
+        android:inputType="textPassword"
+        android:layout_marginTop="90dp"
+        app:layout_constraintEnd_toEndOf="@id/cad_email"
+        app:layout_constraintStart_toStartOf="@id/cad_email"
+        app:layout_constraintTop_toTopOf="@id/cad_email" />
+
+    <androidx.appcompat.widget.AppCompatButton
+        android:id="@+id/bt_finalizar_adm"
+        style="@style/Button"
+        android:text="@string/finalizar_cadastro"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/cad_senha"
+        />
+</androidx.constraintlayout.widget.ConstraintLayout>
+</ScrollView>

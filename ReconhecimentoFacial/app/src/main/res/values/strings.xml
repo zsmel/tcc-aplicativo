@@ -1,0 +1,31 @@
+<resources>
+    <string name="app_name">Nome do App</string>
+    <string name="continuar">Continuar</string>
+    <string name="ou">ou</string>
+    <string name="entre">Entre</string>
+    <string name="text_cadastro_adm">Administrador? Cadastra-se aqui</string>
+    <string name="criar_conta">Crie sua conta em nosso App</string>
+    <string name="email">Digite o seu email para realizar o seu cadastro</string>
+    <string name="title_cadastro">Cadastre-se</string>
+    <string name="info_pessoais">Informações Pessoais</string>
+    <string name="nome">Nome completo</string>
+    <string name="data">Data de nascimento</string>
+    <string name="cpf">CPF</string>
+    <string name="telefone">Telefone</string>
+    <string name="endereco">Endereço</string>
+    <string name="sistem_acess">Acesso ao Sistema</string>
+    <string name="text_email">Email</string>
+    <string name="text_senha">Senha</string>
+    <string name="finalizar_cadastro">Finalizar Cadastro</string>
+    <string name="dados_inst">Dados Institucionais</string>
+    <string name="instituiçao">Instituição</string>
+    <string name="matricula">Matrícula</string>
+    <string name="cargo">Cargo</string>
+    <string name="abrir_camera">Abrir Câmera</string>
+    <string name="monitoramento">Monitoramento</string>
+    <string name="login">Entre em sua conta</string>
+    <string name="email_senha">Digite o seu email e senha para entrar</string>
+    <string name="editar">Editar</string>
+    <string name="salvar">Salvar</string>
+    <string name="cancelar">Cancelar</string>
+</resources>

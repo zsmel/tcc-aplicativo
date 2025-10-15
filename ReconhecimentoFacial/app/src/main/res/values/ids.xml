@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <item name="text_tela_cadastro" type="id" />
+    <item name="text_tela_cadastro_adm" type="id" />
+    <item name="tabLayout" type="id" />
+</resources>
