@@ -1,6 +1,7 @@
 package com.example.reconhecimentofacial;
 
 import androidx.annotation.NonNull;
+import com.example.reconhecimentofacial.ui.ConsultaContainerFragment;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
 import androidx.viewpager2.adapter.FragmentStateAdapter;
@@ -17,7 +18,7 @@ public class ViewPagerAdapter extends FragmentStateAdapter {
         switch (position) {
             case 0: return new MonitoramentoFragment();
             case 1: return new AlertasFragment();
-            case 2: return new ConsultaFragment();
+            case 2: return new ConsultaContainerFragment();
             case 3: return new AnaliseFragment();
             default: return new MonitoramentoFragment();
         }

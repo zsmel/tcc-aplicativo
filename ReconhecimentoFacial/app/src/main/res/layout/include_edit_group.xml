@@ -1,157 +1,26 @@
 <?xml version="1.0" encoding="utf-8"?>
-<com.google.android.material.card.MaterialCardView
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginTop="12dp"
-    app:cardBackgroundColor="#FFFFFF"
-    app:strokeColor="#E6E6E6"
-    app:strokeWidth="1dp"
-    app:cardCornerRadius="10dp"
-    app:cardUseCompatPadding="true"
-    app:cardElevation="0dp">
+    android:orientation="horizontal"
+    android:paddingTop="4dp"
+    android:paddingBottom="4dp">
 
-    <LinearLayout
-        android:orientation="vertical"
-        android:padding="12dp"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+    <TextView
+        android:id="@+id/edit_group_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Rótulo:"
+        android:textAppearance="?attr/textAppearanceBody2"
+        android:textColor="?android:attr/textColorSecondary" />
 
-        <TextView
-            android:id="@+id/tvDadosPessoais"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Dados Pessoais"
-            android:textStyle="bold"
-            android:textColor="#111111"
-            android:layout_marginBottom="8dp"/>
+    <TextView
+        android:id="@+id/edit_group_value"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:text="Valor"
+        android:textAppearance="?attr/textAppearanceBody1"
+        android:textColor="?android:attr/textColorPrimary" />
 
-        <!-- exemplo de campo -->
-        <EditText
-            android:layout_width="match_parent"
-            android:layout_height="25dp"
-            android:hint="Campo"
-            android:textSize="12sp"
-            android:background="@drawable/edit_text"
-            android:padding="8dp"/>
-        <EditText
-            android:layout_width="match_parent"
-            android:layout_height="25dp"
-            android:hint="Campo"
-            android:textSize="12sp"
-            android:background="@drawable/edit_text"
-            android:layout_marginTop="5dp"
-            android:padding="8dp"/>
-        <EditText
-            android:layout_width="match_parent"
-            android:layout_height="25dp"
-            android:hint="Campo"
-            android:textSize="12sp"
-            android:background="@drawable/edit_text"
-            android:layout_marginTop="5dp"
-            android:padding="8dp"/>
-        <EditText
-            android:layout_width="match_parent"
-            android:layout_height="25dp"
-            android:hint="Campo"
-            android:textSize="12sp"
-            android:background="@drawable/edit_text"
-            android:layout_marginTop="5dp"
-            android:padding="8dp"/>
-        <EditText
-            android:layout_width="match_parent"
-            android:layout_height="25dp"
-            android:hint="Campo"
-            android:textSize="12sp"
-            android:background="@drawable/edit_text"
-            android:layout_marginTop="5dp"
-            android:padding="8dp"/>
-        <EditText
-            android:layout_width="match_parent"
-            android:layout_height="25dp"
-            android:hint="Campo"
-            android:textSize="12sp"
-            android:background="@drawable/edit_text"
-            android:layout_marginTop="5dp"
-            android:padding="8dp"/>
-        <EditText
-            android:layout_width="match_parent"
-            android:layout_height="25dp"
-            android:hint="Campo"
-            android:textSize="12sp"
-            android:background="@drawable/edit_text"
-            android:layout_marginTop="5dp"
-            android:padding="8dp"/>
-        <TextView
-            android:id="@+id/tvDadosOcorrencia"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Dados da Ocorrência"
-            android:layout_marginTop="5dp"
-            android:textStyle="bold"
-            android:textColor="#111111"
-            android:layout_marginBottom="8dp"/>
-
-        <!-- exemplo de campo -->
-        <EditText
-            android:layout_width="match_parent"
-            android:layout_height="25dp"
-            android:hint="Campo"
-            android:textSize="12sp"
-            android:background="@drawable/edit_text"
-            android:padding="8dp"/>
-        <EditText
-            android:layout_width="match_parent"
-            android:layout_height="25dp"
-            android:hint="Campo"
-            android:textSize="12sp"
-            android:background="@drawable/edit_text"
-            android:layout_marginTop="5dp"
-            android:padding="8dp"/>
-
-        <TextView
-            android:id="@+id/tvDadosComunicante"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Dados do Comunicante"
-            android:textStyle="bold"
-            android:textColor="#111111"
-            android:layout_marginBottom="8dp"/>
-
-        <!-- exemplo de campo -->
-        <EditText
-            android:layout_width="match_parent"
-            android:layout_height="25dp"
-            android:hint="Campo"
-            android:textSize="12sp"
-            android:background="@drawable/edit_text"
-            android:padding="8dp"/>
-        <EditText
-            android:layout_width="match_parent"
-            android:layout_height="25dp"
-            android:hint="Campo"
-            android:textSize="12sp"
-            android:background="@drawable/edit_text"
-            android:layout_marginTop="5dp"
-            android:padding="8dp"/>
-
-        <TextView
-            android:id="@+id/tvAlertas"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Alertas"
-            android:textStyle="bold"
-            android:textColor="#111111"
-            android:layout_marginBottom="8dp"/>
-
-        <!-- exemplo de campo -->
-        <EditText
-            android:layout_width="match_parent"
-            android:layout_height="25dp"
-            android:hint="Campo"
-            android:textSize="12sp"
-            android:background="@drawable/edit_text"
-            android:padding="8dp"/>
-    </LinearLayout>
-</com.google.android.material.card.MaterialCardView>
+</LinearLayout>

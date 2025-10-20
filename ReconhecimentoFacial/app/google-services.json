@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "94926621665",
+    "firebase_url": "https://tcc-reconhecimento-facia-edc4e-default-rtdb.firebaseio.com",
+    "project_id": "tcc-reconhecimento-facia-edc4e",
+    "storage_bucket": "tcc-reconhecimento-facia-edc4e.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:94926621665:android:511c31265bce469dd220a0",
+        "android_client_info": {
+          "package_name": "com.example.reconhecimentofacial"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB2MOYPVhlZ9s8A1qh58486vRgMJ9XtuI4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

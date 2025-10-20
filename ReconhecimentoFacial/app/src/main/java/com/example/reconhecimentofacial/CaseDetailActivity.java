@@ -1,149 +1,247 @@
 package com.example.reconhecimentofacial;
 
-import android.content.Intent;
+import androidx.appcompat.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
-import android.widget.ImageView;
+import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
-
-import androidx.annotation.Nullable;
-import androidx.appcompat.app.AppCompatActivity;
+import com.google.firebase.firestore.FirebaseFirestore;
 
 public class CaseDetailActivity extends AppCompatActivity {
 
-    private SectionHolder sDadosPessoais, sDadosOcorrencia, sDadosComunicante, sAlertas;
+    private TextView textViewNome, textViewStatus;
+    private View secaoDadosPessoais, secaoDadosOcorrencia, secaoDadosComunicante, secaoAlertasEmitidos;
+    private FirebaseFirestore db;
 
     @Override
-    protected void onCreate(@Nullable Bundle savedInstanceState) {
+    protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_case_detail);
 
-        // Cabeçalho (mock ou via Intent)
-        String nome = getIntent().getStringExtra("nome");
-        String status = getIntent().getStringExtra("status");
-        int foto = getIntent().getIntExtra("fotoResId", 0);
+        db = FirebaseFirestore.getInstance();
+        inicializarComponentes();
 
-        TextView tvNome = findViewById(R.id.tvNome);
-        TextView tvStatus = findViewById(R.id.tvStatus);
-        if (nome != null) tvNome.setText(nome);
-        if (status != null) tvStatus.setText(status);
+        String casoId = getIntent().getStringExtra("CASO_ID");
+        if (casoId != null && !casoId.isEmpty()) {
+            carregarDadosDoCaso(casoId);
+        } else {
+            Toast.makeText(this, "Erro: ID do caso não encontrado.", Toast.LENGTH_LONG).show();
+            finish();
+        }
+    }
 
-        if (foto != 0) {
-            ImageView img = findViewById(R.id.imgFoto);
-            img.setImageResource(foto);
+    private void inicializarComponentes() {
+        textViewNome = findViewById(R.id.tvNome);
+        textViewStatus = findViewById(R.id.tvStatus);
+        secaoDadosPessoais = findViewById(R.id.secDadosPessoais);
+        secaoDadosOcorrencia = findViewById(R.id.secDadosOcorrencia);
+        secaoDadosComunicante = findViewById(R.id.secDadosComunicante);
+        secaoAlertasEmitidos = findViewById(R.id.secAlertasEmitidos);
+    }
+
+    private void carregarDadosDoCaso(String casoId) {
+        db.collection("desaparecidos").document(casoId).get()
+                .addOnSuccessListener(documentSnapshot -> {
+                    if (documentSnapshot.exists()) {
+                        Caso caso = documentSnapshot.toObject(Caso.class);
+                        if (caso != null) {
+                            textViewNome.setText(caso.getNomeCompleto());
+                            textViewStatus.setText(caso.getEstado_desaparecimento());
+
+                            popularSecaoDadosPessoais(caso);
+                            popularSecaoDadosOcorrencia(caso);
+                            popularSecaoComunicante(caso);
+                            popularSecaoAlertas(caso);
+                        }
+                    } else {
+                        Toast.makeText(this, "Caso não encontrado.", Toast.LENGTH_LONG).show();
+                    }
+                })
+                .addOnFailureListener(e -> {
+                    Toast.makeText(this, "Erro ao carregar dados: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                    Log.e("Firestore", "Erro ao buscar documento", e);
+                });
+    }
+
+    private void popularSecaoDadosPessoais(Caso caso) {
+        TextView titulo = secaoDadosPessoais.findViewById(R.id.tvTitulo);
+        LinearLayout container = secaoDadosPessoais.findViewById(R.id.container);
+        View header = secaoDadosPessoais.findViewById(R.id.header);
+
+        titulo.setText("Dados Pessoais");
+        container.removeAllViews();
+
+        adicionarCampo(container, "Nome completo:", caso.getNomeCompleto());
+        adicionarCampo(container, "Data de nascimento:", caso.getDataNascimento());
+        adicionarCampo(container, "Sexo:", caso.getSexo());
+        adicionarCampo(container, "CPF:", caso.getCpf());
+        adicionarCampo(container, "RG:", caso.getRg());
+        adicionarCampo(container, "Órgão expedidor:", caso.getOrgaoExpedidor());
+        adicionarCampo(container, "Nome do pai:", caso.getNomePai());
+        adicionarCampo(container, "Nome da mãe:", caso.getNomeMae());
+        adicionarCampo(container, "Idade à época:", String.valueOf(caso.getIdadeEpoca()));
+
+        adicionarSubtitulo(container, "Informações adicionais");
+        adicionarInfoAdicional(container, "É pessoa com doença mental", caso.isDoenca_mental());
+        adicionarInfoAdicional(container, "Usava telefone celular quando desapareceu", caso.isUsavaTelefone());
+        adicionarInfoAdicional(container, "Dirigia algum veículo quando desapareceu", caso.isDirigia_veiculo());
+        if (caso.isDirigia_veiculo()) {
+            adicionarCampo(container, "   Placa:", caso.getPlaca_veiculo() + " - Modelo: " + caso.getModelo_veiculo());
+        }
+        adicionarInfoAdicional(container, "Possui perfil em redes sociais", caso.isPerfil_redes());
+
+        adicionarSubtitulo(container, "Endereço Residencial");
+        adicionarCampo(container, "Logradouro:", caso.getLogradouro());
+        adicionarCampo(container, "Estado:", caso.getEstado());
+        adicionarCampo(container, "Município:", caso.getMunicipio());
+        adicionarCampo(container, "Bairro:", caso.getBairro());
+        adicionarCampo(container, "Número:", String.valueOf(caso.getNumero()));
+
+        adicionarSubtitulo(container, "Características da Vítima");
+        adicionarCampo(container, "Cor da pele:", caso.getCorPele());
+        adicionarCampo(container, "Cor dos olhos:", caso.getCorOlhos());
+        adicionarCampo(container, "Altura:", String.valueOf(caso.getAltura()));
+        adicionarCampo(container, "Sinais particulares:", caso.getSinaisParticulares());
+        adicionarCampo(container, "Tipo de cabelo:", caso.getTipoCabelo());
+        adicionarCampo(container, "Cor de cabelo:", caso.getCorCabelo());
+        adicionarCampo(container, "Vestimenta:", caso.getVestimenta());
+        adicionarCampo(container, "Objetos:", caso.getObjetos());
+
+        configurarCliqueSecao(header, container);
+    }
+
+    private void popularSecaoDadosOcorrencia(Caso caso) {
+        TextView titulo = secaoDadosOcorrencia.findViewById(R.id.tvTitulo);
+        LinearLayout container = secaoDadosOcorrencia.findViewById(R.id.container);
+        View header = secaoDadosOcorrencia.findViewById(R.id.header);
+
+        titulo.setText("Dados da Ocorrência");
+        container.removeAllViews();
+
+        adicionarCampo(container, "Número do B.O.:", String.valueOf(caso.getNumeroBO()));
+        adicionarCampo(container, "Data do registro:", caso.getDataRegistro());
+        adicionarCampo(container, "Data do desaparecimento:", caso.getDataDesaparecimento());
+        adicionarCampo(container, "Delegacia do registro:", caso.getDelegaciaRegistro());
+
+        adicionarSubtitulo(container, "Local do desaparecimento");
+        adicionarCampo(container, "Logradouro:", caso.getLogradouro_desaparecimento());
+        adicionarCampo(container, "Estado:", caso.getEstado_desaparecimento());
+        adicionarCampo(container, "Município:", caso.getMunicipio_desaparecimento());
+        adicionarCampo(container, "Bairro:", caso.getBairro_desaparecimento());
+        adicionarCampo(container, "Número:", String.valueOf(caso.getNumero_desaparecimento()));
+
+        configurarCliqueSecao(header, container);
+    }
+
+    // --- MÉTODO ATUALIZADO E COMPLETO ---
+    private void popularSecaoComunicante(Caso caso) {
+        TextView titulo = secaoDadosComunicante.findViewById(R.id.tvTitulo);
+        LinearLayout container = secaoDadosComunicante.findViewById(R.id.container);
+        View header = secaoDadosComunicante.findViewById(R.id.header);
+
+        titulo.setText("Dados do Comunicante");
+        container.removeAllViews();
+
+        String comunicanteId = caso.getId_comunicante();
+
+        if (comunicanteId == null || comunicanteId.trim().isEmpty()) {
+            adicionarCampo(container, "Informação:", "Nenhum comunicante vinculado a este caso.");
+            configurarCliqueSecao(header, container);
+            return;
         }
 
-        // Conteúdos (mock formatado conforme protótipo)
-        String dadosPessoais =
-                "Nome completo: Melissa Muniz Bandeira\n" +
-                        "Data de nascimento: 00/00/0000\n" +
-                        "Sexo: F/M\n" +
-                        "CPF: 000.000.000-00\n" +
-                        "RG: 00.000.000-0\n" +
-                        "Órgão expedidor: XX\n" +
-                        "Nome do pai: xxxxxxxx\n" +
-                        "Nome da mãe: xxxxxxxx\n" +
-                        "Idade à época do desaparecimento: 00\n\n" +
-                        "Informações adicionais:\n" +
-                        "□ É pessoa com doença mental\n" +
-                        "□ Usava telefone celular quando desapareceu\n" +
-                        "■ Dirigia algum veículo quando desapareceu\n" +
-                        "   Placa: XXXX - Modelo: XXXX\n" +
-                        "□ Possui perfil em redes sociais\n\n" +
-                        "Endereço Residencial\n" +
-                        "Logradouro: xxxxxxxx\n" +
-                        "Estado: xx\n" +
-                        "Município: xxxxxxxx\n" +
-                        "Bairro: xxxxxxxx\n" +
-                        "Número: 0000\n\n" +
-                        "Características da Vítima\n" +
-                        "Cor da pele: xxxxxxxx\n" +
-                        "Cor dos olhos: xxxxxxxx\n" +
-                        "Altura: 0,00\n" +
-                        "Sinais particulares: xxxxxxxx\n" +
-                        "Tipo de cabelo: xxxxxxxx\n" +
-                        "Cor de cabelo: xxxxxxxx\n" +
-                        "Vestuário: xxxxxxxx\n" +
-                        "Objetos: xxxxxxxx";
+        adicionarCampo(container, "Carregando dados...", ""); // Mostra um feedback enquanto busca
 
-        String dadosOcorrencia =
-                "Número do B.O.: 000000000000\n" +
-                        "Data do registro da ocorrência: 00/00/0000\n" +
-                        "Data do desaparecimento: 00/00/0000\n" +
-                        "Delegacia do registro: xxxxxxxx\n\n" +
-                        "Local do desaparecimento:\n" +
-                        "Logradouro: xxxxxxxx\n" +
-                        "Estado: xx\n" +
-                        "Município: xxxxxxxx\n" +
-                        "Bairro: xxxxxxxx\n" +
-                        "Número: 0000";
+        db.collection("comunicante").document(comunicanteId).get()
+                .addOnSuccessListener(documentSnapshot -> {
+                    container.removeAllViews(); // Limpa a mensagem de "Carregando..."
+                    if (documentSnapshot.exists()) {
+                        Comunicante comunicante = documentSnapshot.toObject(Comunicante.class);
+                        if (comunicante != null) {
+                            // Popula a seção com os dados do comunicante
+                            adicionarCampo(container, "Nome completo:", comunicante.getNomeCompleto());
+                            adicionarCampo(container, "Data de nascimento:", comunicante.getDataNascimento());
+                            adicionarCampo(container, "Sexo:", comunicante.getSexo());
+                            adicionarCampo(container, "CPF:", comunicante.getCpf());
+                            adicionarCampo(container, "RG:", comunicante.getRg());
+                            adicionarCampo(container, "Órgão expedidor:", comunicante.getOrgaoExpedidor());
+                            adicionarCampo(container, "Nome do pai:", comunicante.getNomePai());
+                            adicionarCampo(container, "Nome da mãe:", comunicante.getNomeMae());
 
-        String dadosComunicante =
-                "Nome completo: Melissa Muniz Bandeira\n" +
-                        "Data de nascimento: 00/00/0000\n" +
-                        "Sexo: F/M\n" +
-                        "CPF: 000.000.000-00\n" +
-                        "RG: 00.000.000-0\n" +
-                        "Órgão expedidor: XX\n" +
-                        "Nome do pai: xxxxxxxx\n" +
-                        "Nome da mãe: xxxxxxxx\n\n" +
-                        "Telefone para contato:\n" +
-                        "Celular: (00) 00000-0000\n" +
-                        "Email para contato: xxxxx@xxxx.com\n\n" +
-                        "Endereço Residencial\n" +
-                        "Logradouro: xxxxxxxx\n" +
-                        "Estado: xx\n" +
-                        "Município: xxxxxxxx\n" +
-                        "Bairro: xxxxxxxx\n" +
-                        "Número: 0000";
+                            adicionarSubtitulo(container, "Telefone para contato");
+                            adicionarCampo(container, "Celular:", comunicante.getCelular());
+                            adicionarCampo(container, "Email para contato:", comunicante.getEmail());
 
-        String alertas =
-                "ID #000001                       em 27/02/2025\n" +
-                        "— Alerta 1: Difusão redes sociais\n" +
-                        "— Alerta 2: Notificação regional";
+                            adicionarSubtitulo(container, "Endereço Residencial");
+                            adicionarCampo(container, "Logradouro:", comunicante.getLogradouro());
+                            adicionarCampo(container, "Estado:", comunicante.getEstado());
+                            adicionarCampo(container, "Município:", comunicante.getMunicipio());
+                            adicionarCampo(container, "Bairro:", comunicante.getBairro());
+                            adicionarCampo(container, "Número:", comunicante.getNumero());
+                        }
+                    } else {
+                        adicionarCampo(container, "Aviso:", "Comunicante com ID " + comunicanteId + " não encontrado.");
+                    }
+                })
+                .addOnFailureListener(e -> {
+                    container.removeAllViews(); // Limpa a mensagem de "Carregando..."
+                    adicionarCampo(container, "Erro:", "Falha ao carregar dados do comunicante.");
+                    Log.e("Firestore", "Erro ao buscar comunicante", e);
+                });
 
-        // Bind das seções
-        sDadosPessoais   = bindSection(R.id.secDadosPessoais, "Dados Pessoais", dadosPessoais);
-        sDadosOcorrencia = bindSection(R.id.secDadosOcorrencia, "Dados da Ocorrência", dadosOcorrencia);
-        sDadosComunicante = bindSection(R.id.secDadosComunicante, "Dados do Comunicante", dadosComunicante);
-        sAlertas          = bindSection(R.id.secAlertasEmitidos, "Alertas Emitidos", alertas);
-
-        // Ações
-        findViewById(R.id.btnEditar).setOnClickListener(v ->
-                startActivity(new Intent(this, EditCaseActivity.class)));
-        findViewById(R.id.btnSalvar).setOnClickListener(v ->
-                Toast.makeText(this, "Mock: alterações salvas.", Toast.LENGTH_SHORT).show());
+        configurarCliqueSecao(header, container);
     }
 
-    private SectionHolder bindSection(int includeId, String titulo, String corpoMock) {
-        View root = findViewById(includeId);
-        TextView tvTitulo = root.findViewById(R.id.tvTitulo);
-        ImageView ivArrow = root.findViewById(R.id.ivArrow);
-        LinearLayout container = root.findViewById(R.id.container);
-        View header = root.findViewById(R.id.header);
+    private void popularSecaoAlertas(Caso caso) {
+        TextView titulo = secaoAlertasEmitidos.findViewById(R.id.tvTitulo);
+        LinearLayout container = secaoAlertasEmitidos.findViewById(R.id.container);
+        View header = secaoAlertasEmitidos.findViewById(R.id.header);
 
-        tvTitulo.setText(titulo);
+        titulo.setText("Alertas Emitidos");
+        container.removeAllViews();
 
-        TextView content = new TextView(this);
-        content.setText(corpoMock);
-        content.setTextColor(0xFF333333);
-        container.addView(content);
+        adicionarCampo(container, "Status:", "Nenhum alerta emitido no momento.");
 
-        header.setOnClickListener(v -> toggle(container, ivArrow));
-        return new SectionHolder(container, ivArrow);
+        configurarCliqueSecao(header, container);
     }
 
-    private void toggle(LinearLayout container, ImageView arrow) {
-        boolean expand = container.getVisibility() != View.VISIBLE;
-        container.setVisibility(expand ? View.VISIBLE : View.GONE);
-        arrow.animate().rotation(expand ? 180f : 0f).setDuration(120).start();
+    private void adicionarCampo(LinearLayout container, String rotulo, String valor) {
+        if (valor == null || valor.trim().isEmpty() || valor.equals("0")) {
+            return;
+        }
+        View view = getLayoutInflater().inflate(R.layout.include_edit_group, container, false);
+        ((TextView) view.findViewById(R.id.edit_group_title)).setText(rotulo);
+        ((TextView) view.findViewById(R.id.edit_group_value)).setText(valor);
+        container.addView(view);
     }
 
-    static class SectionHolder {
-        final LinearLayout container;
-        final ImageView arrow;
-        SectionHolder(LinearLayout c, ImageView a) { container = c; arrow = a; }
+    private void adicionarSubtitulo(LinearLayout container, String titulo) {
+        TextView tvSubtitulo = new TextView(this);
+        tvSubtitulo.setText(titulo);
+        tvSubtitulo.setTextAppearance(R.style.TextAppearance_AppCompat_Title);
+        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        params.setMargins(0, 24, 0, 8);
+        tvSubtitulo.setLayoutParams(params);
+        container.addView(tvSubtitulo);
+    }
+
+    private void adicionarInfoAdicional(LinearLayout container, String texto, boolean isChecked) {
+        TextView tvInfo = new TextView(this);
+        tvInfo.setText(texto);
+        tvInfo.setTextAppearance(R.style.TextAppearance_AppCompat_Body1);
+        int icon = isChecked ? R.drawable.ic_checkbox_on : R.drawable.ic_checkbox_off;
+        tvInfo.setCompoundDrawablesWithIntrinsicBounds(icon, 0, 0, 0);
+        tvInfo.setCompoundDrawablePadding(16);
+        container.addView(tvInfo);
+    }
+
+    private void configurarCliqueSecao(View header, View container) {
+        header.setOnClickListener(v -> {
+            container.setVisibility(container.getVisibility() == View.GONE ? View.VISIBLE : View.GONE);
+        });
     }
 }

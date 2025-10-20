@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <TextView
+        android:id="@+id/tvDisclaimer"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="12dp"
+        android:background="#FFFBE6"
+        android:textColor="#8A6D3B"
+        android:textSize="12sp"
+        android:text="Atenção: Os casos a seguir são reais e obtidos de fontes públicas. Se possuir alguma informação, contate as autoridades competentes (Disque 100 ou 190)." />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recyclerViewCasosReais"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:padding="8dp"/>
+
+</LinearLayout>
