@@ -1,5 +1,6 @@
 package com.example.reconhecimentofacial;
 
+// Não há 'import android.R;' aqui
 import androidx.appcompat.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -73,7 +74,6 @@ public class CaseDetailActivity extends AppCompatActivity {
 
         titulo.setText("Dados Pessoais");
         container.removeAllViews();
-
         adicionarCampo(container, "Nome completo:", caso.getNomeCompleto());
         adicionarCampo(container, "Data de nascimento:", caso.getDataNascimento());
         adicionarCampo(container, "Sexo:", caso.getSexo());
@@ -83,7 +83,6 @@ public class CaseDetailActivity extends AppCompatActivity {
         adicionarCampo(container, "Nome do pai:", caso.getNomePai());
         adicionarCampo(container, "Nome da mãe:", caso.getNomeMae());
         adicionarCampo(container, "Idade à época:", String.valueOf(caso.getIdadeEpoca()));
-
         adicionarSubtitulo(container, "Informações adicionais");
         adicionarInfoAdicional(container, "É pessoa com doença mental", caso.isDoenca_mental());
         adicionarInfoAdicional(container, "Usava telefone celular quando desapareceu", caso.isUsavaTelefone());
@@ -92,14 +91,12 @@ public class CaseDetailActivity extends AppCompatActivity {
             adicionarCampo(container, "   Placa:", caso.getPlaca_veiculo() + " - Modelo: " + caso.getModelo_veiculo());
         }
         adicionarInfoAdicional(container, "Possui perfil em redes sociais", caso.isPerfil_redes());
-
         adicionarSubtitulo(container, "Endereço Residencial");
         adicionarCampo(container, "Logradouro:", caso.getLogradouro());
         adicionarCampo(container, "Estado:", caso.getEstado());
         adicionarCampo(container, "Município:", caso.getMunicipio());
         adicionarCampo(container, "Bairro:", caso.getBairro());
         adicionarCampo(container, "Número:", String.valueOf(caso.getNumero()));
-
         adicionarSubtitulo(container, "Características da Vítima");
         adicionarCampo(container, "Cor da pele:", caso.getCorPele());
         adicionarCampo(container, "Cor dos olhos:", caso.getCorOlhos());
@@ -109,7 +106,6 @@ public class CaseDetailActivity extends AppCompatActivity {
         adicionarCampo(container, "Cor de cabelo:", caso.getCorCabelo());
         adicionarCampo(container, "Vestimenta:", caso.getVestimenta());
         adicionarCampo(container, "Objetos:", caso.getObjetos());
-
         configurarCliqueSecao(header, container);
     }
 
@@ -120,23 +116,19 @@ public class CaseDetailActivity extends AppCompatActivity {
 
         titulo.setText("Dados da Ocorrência");
         container.removeAllViews();
-
         adicionarCampo(container, "Número do B.O.:", String.valueOf(caso.getNumeroBO()));
         adicionarCampo(container, "Data do registro:", caso.getDataRegistro());
         adicionarCampo(container, "Data do desaparecimento:", caso.getDataDesaparecimento());
         adicionarCampo(container, "Delegacia do registro:", caso.getDelegaciaRegistro());
-
         adicionarSubtitulo(container, "Local do desaparecimento");
         adicionarCampo(container, "Logradouro:", caso.getLogradouro_desaparecimento());
         adicionarCampo(container, "Estado:", caso.getEstado_desaparecimento());
         adicionarCampo(container, "Município:", caso.getMunicipio_desaparecimento());
         adicionarCampo(container, "Bairro:", caso.getBairro_desaparecimento());
         adicionarCampo(container, "Número:", String.valueOf(caso.getNumero_desaparecimento()));
-
         configurarCliqueSecao(header, container);
     }
 
-    // --- MÉTODO ATUALIZADO E COMPLETO ---
     private void popularSecaoComunicante(Caso caso) {
         TextView titulo = secaoDadosComunicante.findViewById(R.id.tvTitulo);
         LinearLayout container = secaoDadosComunicante.findViewById(R.id.container);
@@ -144,24 +136,19 @@ public class CaseDetailActivity extends AppCompatActivity {
 
         titulo.setText("Dados do Comunicante");
         container.removeAllViews();
-
         String comunicanteId = caso.getId_comunicante();
-
         if (comunicanteId == null || comunicanteId.trim().isEmpty()) {
             adicionarCampo(container, "Informação:", "Nenhum comunicante vinculado a este caso.");
             configurarCliqueSecao(header, container);
             return;
         }
-
-        adicionarCampo(container, "Carregando dados...", ""); // Mostra um feedback enquanto busca
-
+        adicionarCampo(container, "Carregando dados...", "");
         db.collection("comunicante").document(comunicanteId).get()
                 .addOnSuccessListener(documentSnapshot -> {
-                    container.removeAllViews(); // Limpa a mensagem de "Carregando..."
+                    container.removeAllViews();
                     if (documentSnapshot.exists()) {
                         Comunicante comunicante = documentSnapshot.toObject(Comunicante.class);
                         if (comunicante != null) {
-                            // Popula a seção com os dados do comunicante
                             adicionarCampo(container, "Nome completo:", comunicante.getNomeCompleto());
                             adicionarCampo(container, "Data de nascimento:", comunicante.getDataNascimento());
                             adicionarCampo(container, "Sexo:", comunicante.getSexo());
@@ -170,11 +157,9 @@ public class CaseDetailActivity extends AppCompatActivity {
                             adicionarCampo(container, "Órgão expedidor:", comunicante.getOrgaoExpedidor());
                             adicionarCampo(container, "Nome do pai:", comunicante.getNomePai());
                             adicionarCampo(container, "Nome da mãe:", comunicante.getNomeMae());
-
                             adicionarSubtitulo(container, "Telefone para contato");
                             adicionarCampo(container, "Celular:", comunicante.getCelular());
                             adicionarCampo(container, "Email para contato:", comunicante.getEmail());
-
                             adicionarSubtitulo(container, "Endereço Residencial");
                             adicionarCampo(container, "Logradouro:", comunicante.getLogradouro());
                             adicionarCampo(container, "Estado:", comunicante.getEstado());
@@ -187,11 +172,10 @@ public class CaseDetailActivity extends AppCompatActivity {
                     }
                 })
                 .addOnFailureListener(e -> {
-                    container.removeAllViews(); // Limpa a mensagem de "Carregando..."
+                    container.removeAllViews();
                     adicionarCampo(container, "Erro:", "Falha ao carregar dados do comunicante.");
                     Log.e("Firestore", "Erro ao buscar comunicante", e);
                 });
-
         configurarCliqueSecao(header, container);
     }
 
@@ -202,9 +186,7 @@ public class CaseDetailActivity extends AppCompatActivity {
 
         titulo.setText("Alertas Emitidos");
         container.removeAllViews();
-
         adicionarCampo(container, "Status:", "Nenhum alerta emitido no momento.");
-
         configurarCliqueSecao(header, container);
     }
 
@@ -221,7 +203,10 @@ public class CaseDetailActivity extends AppCompatActivity {
     private void adicionarSubtitulo(LinearLayout container, String titulo) {
         TextView tvSubtitulo = new TextView(this);
         tvSubtitulo.setText(titulo);
-        tvSubtitulo.setTextAppearance(R.style.TextAppearance_AppCompat_Title);
+
+        // --- CORREÇÃO ---
+        tvSubtitulo.setTextAppearance(android.R.style.TextAppearance_Large);
+
         LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
         params.setMargins(0, 24, 0, 8);
@@ -232,7 +217,10 @@ public class CaseDetailActivity extends AppCompatActivity {
     private void adicionarInfoAdicional(LinearLayout container, String texto, boolean isChecked) {
         TextView tvInfo = new TextView(this);
         tvInfo.setText(texto);
-        tvInfo.setTextAppearance(R.style.TextAppearance_AppCompat_Body1);
+
+        // --- CORREÇÃO 2: Removido o 'this,' ---
+        tvInfo.setTextAppearance(androidx.appcompat.R.style.TextAppearance_AppCompat_Medium);
+
         int icon = isChecked ? R.drawable.ic_checkbox_on : R.drawable.ic_checkbox_off;
         tvInfo.setCompoundDrawablesWithIntrinsicBounds(icon, 0, 0, 0);
         tvInfo.setCompoundDrawablePadding(16);

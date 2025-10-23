@@ -1,11 +1,11 @@
 buildscript {
     repositories {
         google()
-        jcenter()
-        mavenCentral()
+        mavenCentral() // Removido o 'jcenter()'
     }
     dependencies {
-        classpath "com.android.tools.build:gradle:7.4.2"
+        // --- CORREÇÃO AQUI ---
+        classpath "com.android.tools.build:gradle:8.4.1" // Atualizado de 7.4.2 para 8.4.1
         classpath "com.google.gms:google-services:4.4.3"
     }
 }
@@ -13,8 +13,7 @@ buildscript {
 allprojects {
     repositories {
         google()
-        jcenter()
-        mavenCentral()
+        mavenCentral() // Removido o 'jcenter()'
     }
 }
 

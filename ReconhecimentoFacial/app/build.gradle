@@ -5,13 +5,18 @@ plugins {
 }
 
 android {
-    // NÃO usar "namespace" com AGP 3.6.4 (o pacote vem do AndroidManifest.xml)
-    compileSdkVersion 33
+    namespace 'com.example.reconhecimentofacial'
+
+    // --- CORREÇÃO 1: ATUALIZADO PARA 34 ---
+    compileSdkVersion 34
 
     defaultConfig {
-        applicationId "com.example.reconhecimentofacial" // troque se o seu pacote for outro
+        applicationId "com.example.reconhecimentofacial"
         minSdkVersion 21
-        targetSdkVersion 33
+
+        // --- CORREÇÃO 2: ATUALIZADO PARA 34 ---
+        targetSdkVersion 34
+
         versionCode 1
         versionName "1.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
@@ -24,15 +29,16 @@ android {
         }
     }
 
+    // --- CORREÇÃO 3: ATUALIZADO DE JAVA 8 PARA JAVA 17 ---
+    // (Obrigatório para o Gradle 8.x e Java 21)
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
     }
-    // Se tiver Kotlin:
-    // kotlinOptions { jvmTarget = "1.8" }
 }
 
 dependencies {
+    // Suas dependências (sem alterações)
     implementation 'androidx.appcompat:appcompat:1.2.0'
     implementation 'com.google.android.material:material:1.3.0'
     implementation 'androidx.constraintlayout:constraintlayout:2.0.4'
@@ -47,5 +53,4 @@ dependencies {
     implementation 'com.google.firebase:firebase-firestore'
     implementation 'com.google.firebase:firebase-analytics'
     implementation 'com.google.firebase:firebase-storage'
-
 }
