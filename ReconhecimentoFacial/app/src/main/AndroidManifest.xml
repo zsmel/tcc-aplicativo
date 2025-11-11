@@ -32,9 +32,9 @@
         <activity
             android:name=".Monitoramento"
             android:screenOrientation="portrait" />
-        <activity
+        <!--<activity
             android:name=".MainActivity"
-            android:screenOrientation="portrait" />
+            android:screenOrientation="portrait" />-->
         <activity
             android:name=".CaseDetailActivity"
             android:screenOrientation="portrait" />

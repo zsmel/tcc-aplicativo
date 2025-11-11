@@ -1,42 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <LinearLayout
-        android:orientation="vertical"
-        android:padding="16dp"
-        android:gravity="center_horizontal"
+    <!-- Live Camera Preview -->
+    <androidx.camera.view.PreviewView
+        android:id="@+id/previewView"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="match_parent" />
 
+    <!-- Face Bounding Box Overlay -->
+    <com.example.reconhecimentofacial.FaceOverlayView
+        android:id="@+id/faceOverlay"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Monitoramento"
-            android:textSize="24sp"
-            android:textStyle="bold"
-            android:layout_marginBottom="16dp" />
-
-        <ImageView
-            android:id="@+id/cameraImage"
-            android:layout_width="match_parent"
-            android:layout_height="250dp"
-            android:layout_marginLeft="15dp"
-            android:layout_marginRight="15dp"
-            android:scaleType="centerCrop"
-            android:layout_marginBottom="12dp"
-            android:background="@android:color/darker_gray" />
-
-        <androidx.appcompat.widget.AppCompatButton
-            android:id="@+id/bt_camera"
-            style="@style/Button"
-            android:backgroundTint="@color/gray"
-            android:layout_marginTop="4dp"
-            android:layout_marginLeft="15dp"
-            android:layout_marginRight="15dp"
-            android:text="@string/abrir_camera"/>
-
-    </LinearLayout>
-</ScrollView>
+</FrameLayout>
