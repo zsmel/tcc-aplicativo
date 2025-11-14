@@ -3,6 +3,7 @@ package com.example.reconhecimentofacial;
 import android.Manifest;
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
 import android.graphics.Rect;
 import android.media.Image;
 import android.os.Bundle;
@@ -138,14 +139,22 @@ public class MonitoramentoFragment extends Fragment {
 
     // --- Inner class copied from your MainActivity, trimmed for clarity ---
     private static class FaceAnalyzer implements ImageAnalysis.Analyzer {
+
         private final Context context;
         private final FaceOverlayView overlay;
         private final float[] knownEmb;
         private final FaceEmbeddingExtractor extractor;
         private final FaceDetector detector;
+        private final boolean isFrontCamera = true; // ajuste conforme câmera
 
-        public FaceAnalyzer(Context ctx, FaceOverlayView overlayView,
-                            float[] knownEmbedding, FaceEmbeddingExtractor embeddingExtractor) {
+        private long lastProcessTime = 0;
+        private static final long PROCESS_INTERVAL_MS = 600; // 0,6s por análise
+
+        public FaceAnalyzer(Context ctx,
+                            FaceOverlayView overlayView,
+                            float[] knownEmbedding,
+                            FaceEmbeddingExtractor embeddingExtractor) {
+
             context = ctx;
             overlay = overlayView;
             knownEmb = knownEmbedding;
@@ -156,30 +165,97 @@ public class MonitoramentoFragment extends Fragment {
                     .setLandmarkMode(FaceDetectorOptions.LANDMARK_MODE_NONE)
                     .enableTracking()
                     .build();
+
             detector = FaceDetection.getClient(opts);
         }
 
         @Override
         public void analyze(@NonNull ImageProxy imageProxy) {
+
+            long now = System.currentTimeMillis();
+            if (now - lastProcessTime < PROCESS_INTERVAL_MS) {
+                imageProxy.close();
+                return;
+            }
+            lastProcessTime = now;
+
             @androidx.annotation.OptIn(markerClass = androidx.camera.core.ExperimentalGetImage.class)
             Image mediaImage = imageProxy.getImage();
             if (mediaImage == null) {
                 imageProxy.close();
                 return;
             }
-            InputImage image = InputImage.fromMediaImage(
+
+            InputImage inputImage = InputImage.fromMediaImage(
                     mediaImage, imageProxy.getImageInfo().getRotationDegrees());
 
-            detector.process(image)
+            detector.process(inputImage)
                     .addOnSuccessListener(faces -> {
+
                         List<Rect> boxes = new ArrayList<>();
-                        for (Face f : faces) {
-                            boxes.add(f.getBoundingBox());
-                            // You can add your recognition logic here using extractor + knownEmb
+
+                        // Converte ImageProxy para Bitmap
+                        Bitmap bitmap = FaceUtils.imageProxyToBitmap(imageProxy);
+
+                        // Rotaciona conforme sensor
+                        int rotation = imageProxy.getImageInfo().getRotationDegrees();
+                        bitmap = FaceUtils.rotateBitmap(bitmap, rotation);
+
+                        int viewWidth = overlay.getWidth();
+                        int viewHeight = overlay.getHeight();
+                        int imageWidth = bitmap.getWidth();
+                        int imageHeight = bitmap.getHeight();
+
+                        for (Face face : faces) {
+                            Rect box = face.getBoundingBox();
+
+                            // Mapeia bounding box do bitmap para PreviewView
+                            Rect mappedBox = mapToPreview(box, imageWidth, imageHeight, viewWidth, viewHeight, isFrontCamera);
+
+                            boxes.add(mappedBox);
+
+                            // Recorta o rosto do bitmap
+                            Bitmap croppedFace = FaceUtils.cropFace(bitmap, box);
+                            if (croppedFace == null) continue;
+
+                            try {
+                                float[] currentEmb = extractor.getEmbedding(croppedFace);
+                                float distance = FaceEmbeddingExtractor.euclideanDistance(currentEmb, knownEmb);
+
+                                float THRESHOLD = 1.1f;
+                                if (distance < THRESHOLD) {
+                                    Toast.makeText(context, "Pessoa reconhecida!", Toast.LENGTH_SHORT).show();
+                                }
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
                         }
+
                         overlay.setFaces(boxes);
                     })
-                    .addOnCompleteListener(t -> imageProxy.close());
+                    .addOnCompleteListener(task -> imageProxy.close());
+        }
+
+        private Rect mapToPreview(Rect faceBox, int imageWidth, int imageHeight,
+                                  int viewWidth, int viewHeight, boolean isFrontCamera) {
+
+            float scaleX = (float) viewWidth / imageWidth;
+            float scaleY = (float) viewHeight / imageHeight;
+
+            int left = (int) (faceBox.left * scaleX);
+            int top = (int) (faceBox.top * scaleY);
+            int right = (int) (faceBox.right * scaleX);
+            int bottom = (int) (faceBox.bottom * scaleY);
+
+            if (isFrontCamera) {
+                // espelha horizontalmente
+                int tempLeft = left;
+                left = viewWidth - right;
+                right = viewWidth - tempLeft;
+            }
+
+            return new Rect(left, top, right, bottom);
         }
     }
+
 }
