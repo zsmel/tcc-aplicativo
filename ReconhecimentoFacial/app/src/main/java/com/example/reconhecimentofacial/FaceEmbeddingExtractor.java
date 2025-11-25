@@ -30,7 +30,7 @@ public class FaceEmbeddingExtractor {
         return fileChannel.map(FileChannel.MapMode.READ_ONLY, startOffset, declaredLength);
     }
 
-    public float[] getEmbedding(Bitmap bitmap) {
+    public float[] ccgetEmbedding(Bitmap bitmap) {
         // Resize if needed
         Bitmap resized = Bitmap.createScaledBitmap(bitmap, 112, 112, true);
 

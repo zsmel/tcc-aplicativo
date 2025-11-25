@@ -139,7 +139,7 @@ public class MonitoramentoFragment extends Fragment {
             if (faceBitmap == null) continue;
 
             // Calcula embedding real da face
-            float[] faceEmbedding = embeddingExtractor.getEmbedding(faceBitmap);
+            float[] faceEmbedding = embeddingExtractor.ccgetEmbedding(faceBitmap);
 
             // Compara com embedding salvo
             float distance = FaceEmbeddingExtractor.euclideanDistance(faceEmbedding, storedEmbedding);
