@@ -20,15 +20,7 @@ public class FormLogin extends AppCompatActivity {
             getSupportActionBar().hide();
         }
 
-        Button buttonContinuar = findViewById(R.id.bt_continuar);
-        buttonContinuar.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(FormLogin.this, FormCadastro.class);
-                startActivity(intent);
-            }
-        });
-
+        // Botão "Entre" -> Vai para a tela de Login (Email/Senha)
         Button buttonEntre = findViewById(R.id.bt_entre);
         buttonEntre.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -38,8 +30,9 @@ public class FormLogin extends AppCompatActivity {
             }
         });
 
+        // Link "Administrador? Cadastre-se aqui"
         TextView textLink = findViewById(R.id.text_cadastro_adm);
-        textLink.setPaintFlags(textLink.getPaintFlags() | Paint.UNDERLINE_TEXT_FLAG);
+        textLink.setPaintFlags(textLink.getPaintFlags() | Paint.UNDERLINE_TEXT_FLAG); // Sublinhado
         textLink.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {

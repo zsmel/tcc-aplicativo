@@ -5,148 +5,76 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/white_2"
+    android:padding="24dp"
     tools:context=".FormLogin">
 
     <ImageView
         android:id="@+id/logo"
-        android:layout_width="110dp"
-        android:layout_height="85dp"
-        android:layout_marginTop="80dp"
+        android:layout_width="120dp"
+        android:layout_height="120dp"
         android:src="@drawable/logo"
+        app:layout_constraintBottom_toTopOf="@+id/appname"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.498"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_chainStyle="packed" />
 
     <TextView
         android:id="@+id/appname"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
         android:text="@string/app_name"
-        android:textSize="22sp"
-        android:textStyle="bold"
         android:textColor="@color/black"
-        app:layout_constraintStart_toStartOf="parent"
+        android:textSize="24sp"
+        android:textStyle="bold"
+        app:layout_constraintBottom_toTopOf="@+id/subtitle"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/logo"/>
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/logo" />
 
     <TextView
-        android:id="@+id/title_criar_conta"
+        android:id="@+id/subtitle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="24dp"
-        android:text="@string/criar_conta"
-        android:textSize="18sp"
-        android:textStyle="bold"
-        android:textColor="@color/black"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="32dp"
+        android:gravity="center"
+        android:text="Identificação e segurança na palma da mão"
+        android:textColor="@color/gray"
+        android:textSize="16sp"
+        app:layout_constraintBottom_toTopOf="@+id/bt_entre"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.497"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/appname" />
-
-    <TextView
-        android:id="@+id/title_email"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/email"
-        android:textSize="16sp"
-        android:textColor="@color/black_2"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/title_criar_conta"/>
-
-    <View
-        android:id="@+id/containerComponents"
-        style="@style/ContainerComponentsLogin"
-        android:layout_marginTop="0dp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="@id/title_email"
-        app:layout_constraintTop_toBottomOf="@+id/title_email" />
-
-    <EditText
-        android:id="@+id/edit_email"
-        style="@style/Edit_Text"
-        android:hint="email@dominío.com.br"
-        android:inputType="textEmailAddress"
-        app:layout_constraintStart_toStartOf="@+id/containerComponents"
-        app:layout_constraintEnd_toEndOf="@id/containerComponents"
-        app:layout_constraintTop_toTopOf="@id/containerComponents" />
-
-    <androidx.appcompat.widget.AppCompatButton
-        android:id="@+id/bt_continuar"
-        style="@style/Button"
-        android:text="@string/continuar"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/edit_email"
-        />
-
-    <ProgressBar
-        android:id="@+id/progressbar"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="20dp"
-        android:visibility="invisible"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/containerComponents"/>
-
-    <TextView
-        android:id="@+id/anotheroption"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/ou"
-        android:textSize="15sp"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/bt_continuar"/>
-    />
-
-    <ImageView
-        android:id="@+id/grayline1"
-        android:layout_width="170dp"
-        android:layout_height="176dp"
-        android:layout_marginTop="347dp"
-        android:src="@drawable/grayline"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.164"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/bt_continuar"
-        />
-
-    <ImageView
-        android:id="@+id/grayline2"
-        android:layout_width="170dp"
-        android:layout_height="176dp"
-        android:layout_marginTop="347dp"
-        android:src="@drawable/grayline"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.855"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/bt_continuar"
-        app:layout_constraintTop_toTopOf="parent" />
 
     <androidx.appcompat.widget.AppCompatButton
         android:id="@+id/bt_entre"
         style="@style/Button"
-        android:backgroundTint="@color/gray"
-        android:layout_marginTop="4dp"
-        android:text="@string/entre"
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:layout_marginBottom="16dp"
+        android:layout_marginLeft="0dp"
+        android:layout_marginRight="0dp"
+        android:backgroundTint="@color/purple_500"
+        android:text="Entrar"
+        android:textColor="@color/white"
+        app:layout_constraintBottom_toTopOf="@+id/text_cadastro_adm"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="1.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/anotheroption" />
+        app:layout_constraintTop_toBottomOf="@+id/subtitle" />
 
     <TextView
         android:id="@+id/text_cadastro_adm"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="6dp"
         android:text="@string/text_cadastro_adm"
-        android:textSize="12sp"
-        app:layout_constraintTop_toBottomOf="@id/bt_entre"
-        app:layout_constraintStart_toStartOf="parent"
+        android:textColor="@color/purple_700"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        />
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/bt_entre" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>

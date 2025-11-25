@@ -1,29 +1,32 @@
 package com.example.reconhecimentofacial;
 
-// ... (seus imports existentes)
 import android.content.Intent;
 import android.net.Uri;
-import android.widget.TextView;
-import java.text.DecimalFormat;
-// ...
-
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.ImageButton;
+import android.widget.ProgressBar;
 import android.widget.RadioGroup;
 import android.widget.Spinner;
+import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.fragment.app.Fragment;
 import androidx.core.content.ContextCompat;
+import androidx.fragment.app.Fragment;
 
 import com.example.reconhecimentofacial.ui.ColumnChartView;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.QueryDocumentSnapshot;
 
+import java.text.DecimalFormat;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Map;
 
 public class AnaliseFragment extends Fragment {
@@ -32,19 +35,17 @@ public class AnaliseFragment extends Fragment {
     private Spinner spAno, spMes;
     private RadioGroup rgSituacao;
     private TextView tvTotalSelecionado, tvTituloRegiao, tvTituloSexo, tvTituloIdade, tvLinkSite;
+    private ImageButton btnAtualizar; // NOVO BOTÃO
     private DecimalFormat decimalFormat;
     private int[] chartColors;
-
-    private final String[] MESES_MAP_KEY = {
-            null, "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
-            "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"
-    };
+    private FirebaseFirestore db;
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View v = inflater.inflate(R.layout.fragment_analise, container, false);
 
+        db = FirebaseFirestore.getInstance();
         decimalFormat = new DecimalFormat("#,###");
 
         chartColors = new int[]{
@@ -61,6 +62,7 @@ public class AnaliseFragment extends Fragment {
         spAno     = v.findViewById(R.id.spAno);
         spMes     = v.findViewById(R.id.spMes);
         rgSituacao= v.findViewById(R.id.rgSituacao);
+        btnAtualizar = v.findViewById(R.id.btnAtualizarAnalise); // VINCULADO
 
         tvTotalSelecionado = v.findViewById(R.id.tvTotalSelecionado);
         tvTituloRegiao = v.findViewById(R.id.tvTituloRegiao);
@@ -70,12 +72,11 @@ public class AnaliseFragment extends Fragment {
 
         spAno.setAdapter(new ArrayAdapter<>(requireContext(),
                 android.R.layout.simple_spinner_dropdown_item,
-                Arrays.asList("2025", "2024", "2023", "2022", "2021", "2020")));
+                Arrays.asList("2025", "2024", "2023", "2022")));
 
         spMes.setAdapter(new ArrayAdapter<>(requireContext(),
                 android.R.layout.simple_spinner_dropdown_item,
-                Arrays.asList("Todos", "Jan", "Fev", "Mar", "Abr", "Mai", "Jun",
-                        "Jul", "Ago", "Set", "Out", "Nov", "Dezembro")));
+                Arrays.asList("Todos", "Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez")));
 
         AdapterView.OnItemSelectedListener rerender = new AdapterView.OnItemSelectedListener() {
             @Override public void onItemSelected(AdapterView<?> parent, View view, int position, long id) { renderAll(); }
@@ -86,16 +87,15 @@ public class AnaliseFragment extends Fragment {
 
         rgSituacao.setOnCheckedChangeListener((g, id) -> renderAll());
 
-        // Listener do Link: URL para os "Dados Originais"
-        tvLinkSite.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                // Manter a URL do Power BI, que é onde estariam os "Dados Originais" detalhados.
-                String url = "https://app.powerbi.com/view?r=eyJrIjoiNWQ0NTdlY2UtMTI2NC00MzQ0LWI3MTQtMmYxNmY5NTZlN2VlIiwidCI6ImViMDkwNDIwLTQ0NGMtNDNmNy05MWYyLTRiOGRhNmJmZThlMSJ9";
-                Intent i = new Intent(Intent.ACTION_VIEW);
-                i.setData(Uri.parse(url));
-                startActivity(i);
-            }
+        tvLinkSite.setOnClickListener(view -> {
+            String url = "https://app.powerbi.com/view?r=eyJrIjoiNWQ0NTdlY2UtMTI2NC00MzQ0LWI3MTQtMmYxNmY5NTZlN2VlIiwidCI6ImViMDkwNDIwLTQ0NGMtNDNmNy05MWYyLTRiOGRhNmJmZThlMSJ9";
+            startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url)));
+        });
+
+        // AÇÃO DO BOTÃO ATUALIZAR
+        btnAtualizar.setOnClickListener(view -> {
+            Toast.makeText(getContext(), "Atualizando gráficos...", Toast.LENGTH_SHORT).show();
+            renderAll();
         });
 
         renderAll();
@@ -103,86 +103,134 @@ public class AnaliseFragment extends Fragment {
     }
 
     private void renderAll() {
+        int selectedId = rgSituacao.getCheckedRadioButtonId();
+
+        if (selectedId == R.id.rbCadastrados) {
+            // MODO ONLINE: Busca do Firebase
+            carregarDadosDoFirebase();
+            // Desabilita spinners pois vamos mostrar o total geral do banco
+            spAno.setEnabled(false);
+            spMes.setEnabled(false);
+        } else {
+            // MODO OFFLINE: Dados Estáticos do SINESP
+            spAno.setEnabled(true);
+            spMes.setEnabled(true);
+            carregarDadosEstaticos(selectedId);
+        }
+    }
+
+    private void carregarDadosDoFirebase() {
+        tvTotalSelecionado.setText("Carregando dados do App...");
+
+        db.collection("desaparecidos").get().addOnSuccessListener(queryDocumentSnapshots -> {
+            int total = 0;
+
+            // Mapas para contagem
+            Map<String, Integer> contSexo = new HashMap<>();
+            contSexo.put("Masculino", 0); contSexo.put("Feminino", 0); contSexo.put("Não Informado", 0);
+
+            Map<String, Integer> contRegiao = new HashMap<>();
+            contRegiao.put("Norte", 0); contRegiao.put("Nordeste", 0); contRegiao.put("Centro-O.", 0);
+            contRegiao.put("Sudeste", 0); contRegiao.put("Sul", 0);
+
+            Map<String, Integer> contIdade = new HashMap<>();
+            contIdade.put("0 a 17 anos", 0); contIdade.put("+18 anos", 0);
+
+            for (QueryDocumentSnapshot doc : queryDocumentSnapshots) {
+                total++;
+                Caso caso = doc.toObject(Caso.class);
+
+                // 1. Contagem Sexo
+                String sx = caso.getSexo();
+                if(sx == null) sx = "Não Informado";
+                if(sx.toLowerCase().contains("masc")) contSexo.put("Masculino", contSexo.get("Masculino")+1);
+                else if(sx.toLowerCase().contains("fem")) contSexo.put("Feminino", contSexo.get("Feminino")+1);
+                else contSexo.put("Não Informado", contSexo.get("Não Informado")+1);
+
+                // 2. Contagem Região (Baseada no Estado)
+                String uf = caso.getEstado_desaparecimento();
+                if(uf == null) uf = "";
+                if(Arrays.asList("SP", "RJ", "MG", "ES").contains(uf)) contRegiao.put("Sudeste", contRegiao.get("Sudeste")+1);
+                else if(Arrays.asList("PR", "SC", "RS").contains(uf)) contRegiao.put("Sul", contRegiao.get("Sul")+1);
+                else if(Arrays.asList("DF", "GO", "MT", "MS").contains(uf)) contRegiao.put("Centro-O.", contRegiao.get("Centro-O.")+1);
+                else if(Arrays.asList("BA", "SE", "AL", "PE", "PB", "RN", "CE", "PI", "MA").contains(uf)) contRegiao.put("Nordeste", contRegiao.get("Nordeste")+1);
+                else contRegiao.put("Norte", contRegiao.get("Norte")+1);
+
+                // 3. Contagem Idade
+                int idade = 0;
+                try {
+                    String idadeStr = caso.getIdadeEpoca();
+                    if (idadeStr != null && !idadeStr.isEmpty()) {
+                        idade = Integer.parseInt(idadeStr);
+                    }
+                } catch (NumberFormatException e) {
+                    idade = 0;
+                }
+
+                if(idade <= 17) contIdade.put("0 a 17 anos", contIdade.get("0 a 17 anos")+1);
+                else contIdade.put("+18 anos", contIdade.get("+18 anos")+1);
+            }
+
+            // Atualiza UI
+            tvTotalSelecionado.setText("Total Cadastrados no App: " + total);
+
+            colSexo.setData(new float[]{contSexo.get("Masculino"), contSexo.get("Feminino"), contSexo.get("Não Informado")},
+                    new String[]{"Masc", "Fem", "N/I"},
+                    new int[]{chartColors[0], chartColors[1], chartColors[3]});
+
+            colRegiao.setData(new float[]{contRegiao.get("Norte"), contRegiao.get("Nordeste"), contRegiao.get("Centro-O."), contRegiao.get("Sudeste"), contRegiao.get("Sul")},
+                    new String[]{"Norte", "Nordeste", "Centro", "Sudeste", "Sul"}, chartColors);
+
+            colIdade.setData(new float[]{contIdade.get("0 a 17 anos"), contIdade.get("+18 anos")},
+                    new String[]{"0-17", "+18"},
+                    new int[]{chartColors[2], chartColors[4]});
+
+        }).addOnFailureListener(e -> {
+            tvTotalSelecionado.setText("Erro ao carregar dados.");
+        });
+    }
+
+    private void carregarDadosEstaticos(int selectedSituacaoId) {
         String anoSelecionado = (String) spAno.getSelectedItem();
         if (anoSelecionado == null) anoSelecionado = "2025";
-
-        int selectedSituacaoId = rgSituacao.getCheckedRadioButtonId();
 
         EstatisticasAnuais dadosDoAno = null;
         String situacaoTexto;
 
         if (selectedSituacaoId == R.id.rbDesaparecidos) {
-            situacaoTexto = "Desaparecidas";
+            situacaoTexto = "Desaparecidas (SINESP)";
             switch (anoSelecionado) {
-                case "2020": dadosDoAno = DadosEstatisticos.dados2020; break;
-                case "2021": dadosDoAno = DadosEstatisticos.dados2021; break;
                 case "2022": dadosDoAno = DadosEstatisticos.dados2022; break;
                 case "2023": dadosDoAno = DadosEstatisticos.dados2023; break;
                 case "2024": dadosDoAno = DadosEstatisticos.dados2024; break;
                 case "2025": dadosDoAno = DadosEstatisticos.dados2025; break;
+                default: dadosDoAno = DadosEstatisticos.dados2025; break;
             }
-        } else if (selectedSituacaoId == R.id.rbLocalizados) {
-            situacaoTexto = "Localizadas";
+        } else {
+            situacaoTexto = "Localizadas (SINESP)";
             switch (anoSelecionado) {
-                case "2020": dadosDoAno = DadosEstatisticos.dadosLocalizados2020; break;
-                case "2021": dadosDoAno = DadosEstatisticos.dadosLocalizados2021; break;
                 case "2022": dadosDoAno = DadosEstatisticos.dadosLocalizados2022; break;
                 case "2023": dadosDoAno = DadosEstatisticos.dadosLocalizados2023; break;
                 case "2024": dadosDoAno = DadosEstatisticos.dadosLocalizados2024; break;
                 case "2025": dadosDoAno = DadosEstatisticos.dadosLocalizados2025; break;
+                default: dadosDoAno = DadosEstatisticos.dadosLocalizados2025; break;
             }
-        } else {
-            situacaoTexto = "Desaparecidas";
-            dadosDoAno = DadosEstatisticos.dados2025;
         }
 
-        if (dadosDoAno == null) {
-            colRegiao.setData(new float[]{}, new String[]{});
-            colSexo.setData(new float[]{}, new String[]{});
-            colIdade.setData(new float[]{}, new String[]{});
-            tvTotalSelecionado.setText("Dados indisponíveis");
-            tvTituloRegiao.setText("Por Região");
-            tvTituloSexo.setText("Por Sexo");
-            tvTituloIdade.setText("Por Faixa Etária");
-            return;
+        if (dadosDoAno != null) {
+            tvTotalSelecionado.setText("Total " + situacaoTexto + " (" + anoSelecionado + "): " + decimalFormat.format(dadosDoAno.getTotal()));
+
+            Map<String, Integer> dadosRegiao = dadosDoAno.getPorRegiao();
+            colRegiao.setData(new float[]{dadosRegiao.get("Norte"), dadosRegiao.get("Nordeste"), dadosRegiao.get("Centro-O."), dadosRegiao.get("Sudeste"), dadosRegiao.get("Sul")},
+                    new String[]{"Norte", "Nordeste", "Centro", "Sudeste", "Sul"}, chartColors);
+
+            Map<String, Integer> dadosSexo = dadosDoAno.getPorSexo();
+            colSexo.setData(new float[]{dadosSexo.get("Masculino"), dadosSexo.get("Feminino"), dadosSexo.get("Não Informado")},
+                    new String[]{"Masc", "Fem", "N/I"}, new int[]{chartColors[0], chartColors[1], chartColors[3]});
+
+            Map<String, Integer> dadosIdade = dadosDoAno.getPorFaixaEtaria();
+            colIdade.setData(new float[]{dadosIdade.get("0 a 17 anos"), dadosIdade.get("+18 anos")},
+                    new String[]{"0-17", "+18"}, new int[]{chartColors[2], chartColors[4]});
         }
-
-        String totalFormatado = decimalFormat.format(dadosDoAno.getTotal());
-        tvTotalSelecionado.setText("Total de Pessoas " + situacaoTexto + " (" + anoSelecionado + "): " + totalFormatado);
-
-        tvTituloRegiao.setText(situacaoTexto + " por Região");
-        tvTituloSexo.setText(situacaoTexto + " por Sexo");
-        tvTituloIdade.setText(situacaoTexto + " por Faixa Etária");
-
-        Map<String, Integer> dadosRegiao = dadosDoAno.getPorRegiao();
-        float[] regValues = new float[]{
-                dadosRegiao.get("Norte"),
-                dadosRegiao.get("Nordeste"),
-                dadosRegiao.get("Centro-O."),
-                dadosRegiao.get("Sudeste"),
-                dadosRegiao.get("Sul")
-        };
-        String[] regLabels = new String[]{"Norte", "Nordeste", "Centro-O.", "Sudeste", "Sul"};
-        colRegiao.setData(regValues, regLabels, chartColors);
-
-        Map<String, Integer> dadosSexo = dadosDoAno.getPorSexo();
-        float[] sxValues = new float[]{
-                dadosSexo.get("Masculino"),
-                dadosSexo.get("Feminino"),
-                dadosSexo.get("Não Informado")
-        };
-        String[] sxLabels = new String[]{"Masculino", "Feminino", "N/I"};
-        int[] sexoColors = new int[]{chartColors[0], chartColors[1], chartColors[3]};
-        colSexo.setData(sxValues, sxLabels, sexoColors);
-
-        Map<String, Integer> dadosIdade = dadosDoAno.getPorFaixaEtaria();
-        float[] idValues = new float[]{
-                dadosIdade.get("0 a 17 anos"),
-                dadosIdade.get("+18 anos"),
-                dadosIdade.get("N/I")
-        };
-        String[] idLabels = new String[]{"0-17 anos", "+18 anos", "N/I"};
-        int[] idadeColors = new int[]{chartColors[2], chartColors[4], chartColors[0]};
-        colIdade.setData(idValues, idLabels, idadeColors);
     }
 }

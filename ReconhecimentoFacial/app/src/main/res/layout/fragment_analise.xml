@@ -13,39 +13,56 @@
         android:orientation="vertical"
         android:padding="16dp">
 
-        <TextView
-            android:layout_width="wrap_content"
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Análise e Estatísticas"
-            android:textStyle="bold"
-            android:textSize="20sp"
-            android:textColor="@color/black"
-            android:layout_marginBottom="4dp" />
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="4dp">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Análise e Estatísticas"
+                android:textColor="@color/black"
+                android:textSize="20sp"
+                android:textStyle="bold" />
+
+            <ImageButton
+                android:id="@+id/btnAtualizarAnalise"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:src="@android:drawable/ic_popup_sync"
+                app:tint="@color/purple_500"
+                android:contentDescription="Atualizar" />
+        </LinearLayout>
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginBottom="12dp"
             android:text="Pessoas desaparecidas e localizadas"
-            android:textSize="14sp"
             android:textColor="@color/gray"
-            android:layout_marginBottom="12dp" />
+            android:textSize="14sp" />
 
         <TextView
             android:id="@+id/tvTotalSelecionado"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginBottom="12dp"
             android:text="Total (2025): ..."
-            android:textStyle="bold"
-            android:textSize="18sp"
             android:textColor="@color/accent_blue"
-            android:layout_marginBottom="12dp" />
+            android:textSize="18sp"
+            android:textStyle="bold" />
 
         <androidx.cardview.widget.CardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="12dp"
-            app:cardUseCompatPadding="true"
-            app:cardElevation="1dp">
+            app:cardElevation="1dp"
+            app:cardUseCompatPadding="true">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -57,15 +74,15 @@
                     android:id="@+id/tvTituloRegiao"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:layout_marginBottom="8dp"
                     android:text="Por região"
-                    android:textStyle="bold"
                     android:textColor="@color/black"
-                    android:layout_marginBottom="8dp"/>
+                    android:textStyle="bold" />
 
                 <com.example.reconhecimentofacial.ui.ColumnChartView
                     android:id="@+id/colRegiao"
                     android:layout_width="match_parent"
-                    android:layout_height="220dp"/>
+                    android:layout_height="220dp" />
             </LinearLayout>
         </androidx.cardview.widget.CardView>
 
@@ -73,8 +90,8 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="12dp"
-            app:cardUseCompatPadding="true"
-            app:cardElevation="1dp">
+            app:cardElevation="1dp"
+            app:cardUseCompatPadding="true">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -86,15 +103,15 @@
                     android:id="@+id/tvTituloSexo"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:layout_marginBottom="8dp"
                     android:text="Por sexo"
-                    android:textStyle="bold"
                     android:textColor="@color/black"
-                    android:layout_marginBottom="8dp"/>
+                    android:textStyle="bold" />
 
                 <com.example.reconhecimentofacial.ui.ColumnChartView
                     android:id="@+id/colSexo"
                     android:layout_width="match_parent"
-                    android:layout_height="220dp"/>
+                    android:layout_height="220dp" />
             </LinearLayout>
         </androidx.cardview.widget.CardView>
 
@@ -102,8 +119,8 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="16dp"
-            app:cardUseCompatPadding="true"
-            app:cardElevation="1dp">
+            app:cardElevation="1dp"
+            app:cardUseCompatPadding="true">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -115,15 +132,15 @@
                     android:id="@+id/tvTituloIdade"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:layout_marginBottom="8dp"
                     android:text="Por idade"
-                    android:textStyle="bold"
                     android:textColor="@color/black"
-                    android:layout_marginBottom="8dp"/>
+                    android:textStyle="bold" />
 
                 <com.example.reconhecimentofacial.ui.ColumnChartView
                     android:id="@+id/colIdade"
                     android:layout_width="match_parent"
-                    android:layout_height="220dp"/>
+                    android:layout_height="220dp" />
             </LinearLayout>
         </androidx.cardview.widget.CardView>
 
@@ -131,16 +148,16 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Período"
-            android:textStyle="bold"
-            android:textColor="@color/black"/>
+            android:textColor="@color/black"
+            android:textStyle="bold" />
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical"
             android:layout_marginTop="6dp"
-            android:layout_marginBottom="12dp">
+            android:layout_marginBottom="12dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
 
             <Spinner
                 android:id="@+id/spAno"
@@ -163,29 +180,36 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Situação"
-            android:textStyle="bold"
-            android:textColor="@color/black"/>
+            android:textColor="@color/black"
+            android:textStyle="bold" />
 
         <RadioGroup
             android:id="@+id/rgSituacao"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_marginTop="6dp">
+            android:layout_marginTop="6dp"
+            android:orientation="horizontal">
 
             <RadioButton
                 android:id="@+id/rbDesaparecidos"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Desaparecidos"
-                android:checked="true"/>
+                android:checked="true"
+                android:text="SINESP" />
+
+            <RadioButton
+                android:id="@+id/rbCadastrados"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="12dp"
+                android:text="Cadastrados (App)" />
 
             <RadioButton
                 android:id="@+id/rbLocalizados"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Localizados"
-                android:layout_marginStart="16dp"/>
+                android:layout_marginStart="12dp"
+                android:text="Localizados" />
         </RadioGroup>
 
 
@@ -193,17 +217,17 @@
             android:id="@+id/tvLinkSite"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Dados Originais"
-            android:textColor="@color/accent_blue"
-            android:textSize="14sp"
             android:layout_gravity="center_horizontal"
             android:layout_marginTop="24dp"
-            android:padding="8dp"
             android:background="?attr/selectableItemBackground"
             android:clickable="true"
-            android:focusable="true"
             android:drawableStart="@drawable/ic_link_external"
-            android:drawablePadding="8dp" />
+            android:drawablePadding="8dp"
+            android:focusable="true"
+            android:padding="8dp"
+            android:text="Dados Originais"
+            android:textColor="@color/accent_blue"
+            android:textSize="14sp" />
 
     </LinearLayout>
 </ScrollView>

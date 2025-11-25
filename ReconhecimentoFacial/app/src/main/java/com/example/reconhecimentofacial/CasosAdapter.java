@@ -51,15 +51,22 @@ public class CasosAdapter extends RecyclerView.Adapter<CasosAdapter.ViewHolder> 
             holder.textViewStatus.setText("Status não informado");
         }
 
+        // --- AQUI ESTÁ A MUDANÇA PARA FOTO REDONDA ---
         if (caso.getFotos() != null && !caso.getFotos().isEmpty()) {
             Glide.with(context)
                     .load(caso.getFotos().get(0))
                     .placeholder(R.drawable.ic_placeholder_person)
                     .error(R.drawable.ic_placeholder_person)
+                    .circleCrop() // <--- ESTA LINHA FAZ O CORTE REDONDO
                     .into(holder.imageViewFoto);
         } else {
-            holder.imageViewFoto.setImageResource(R.drawable.ic_placeholder_person);
+            // Carrega o placeholder redondo também para manter o padrão
+            Glide.with(context)
+                    .load(R.drawable.ic_placeholder_person)
+                    .circleCrop()
+                    .into(holder.imageViewFoto);
         }
+        // ---------------------------------------------
 
         holder.buttonDetalhes.setOnClickListener(v -> {
             if (listener != null) {

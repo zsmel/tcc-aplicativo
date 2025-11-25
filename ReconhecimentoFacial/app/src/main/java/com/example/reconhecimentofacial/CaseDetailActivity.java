@@ -1,71 +1,169 @@
 package com.example.reconhecimentofacial;
 
-// Não há 'import android.R;' aqui
-import androidx.appcompat.app.AppCompatActivity;
+import android.content.Intent;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
-import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog; // Importante para o pop-up
+import androidx.appcompat.app.AppCompatActivity;
+
+import com.bumptech.glide.Glide;
 import com.google.firebase.firestore.FirebaseFirestore;
+
+import java.util.List;
 
 public class CaseDetailActivity extends AppCompatActivity {
 
-    private TextView textViewNome, textViewStatus;
+    private ImageView imgFoto;
+    private TextView tvNome, tvStatus;
+
+    // Referências para as seções (Includes)
     private View secaoDadosPessoais, secaoDadosOcorrencia, secaoDadosComunicante, secaoAlertasEmitidos;
+
+    private View progressBar;
+    private View contentLayout;
+    private Button btnVoltar, btnEditar, btnExcluir; // Adicionado btnExcluir
+
     private FirebaseFirestore db;
+    private String casoId;
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_case_detail);
 
-        db = FirebaseFirestore.getInstance();
-        inicializarComponentes();
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().hide();
+        }
 
-        String casoId = getIntent().getStringExtra("CASO_ID");
-        if (casoId != null && !casoId.isEmpty()) {
-            carregarDadosDoCaso(casoId);
-        } else {
-            Toast.makeText(this, "Erro: ID do caso não encontrado.", Toast.LENGTH_LONG).show();
+        db = FirebaseFirestore.getInstance();
+
+        initViews();
+
+        casoId = getIntent().getStringExtra("CASO_ID");
+
+        if (casoId == null) {
+            Toast.makeText(this, "Erro: ID do caso não encontrado.", Toast.LENGTH_SHORT).show();
             finish();
+        }
+
+        // Ações dos Botões
+        btnVoltar.setOnClickListener(v -> finish());
+
+        btnEditar.setOnClickListener(v -> {
+            Intent intent = new Intent(CaseDetailActivity.this, EditCaseActivity.class);
+            intent.putExtra("CASO_ID", casoId);
+            startActivity(intent);
+        });
+
+        // Ação do Botão Excluir
+        btnExcluir.setOnClickListener(v -> confirmarExclusao());
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (casoId != null) {
+            carregarDadosDoCaso(casoId);
         }
     }
 
-    private void inicializarComponentes() {
-        textViewNome = findViewById(R.id.tvNome);
-        textViewStatus = findViewById(R.id.tvStatus);
+    private void initViews() {
+        imgFoto = findViewById(R.id.imgFoto);
+        tvNome = findViewById(R.id.tvNome);
+        tvStatus = findViewById(R.id.tvStatus);
+
         secaoDadosPessoais = findViewById(R.id.secDadosPessoais);
         secaoDadosOcorrencia = findViewById(R.id.secDadosOcorrencia);
         secaoDadosComunicante = findViewById(R.id.secDadosComunicante);
         secaoAlertasEmitidos = findViewById(R.id.secAlertasEmitidos);
+
+        progressBar = findViewById(R.id.progressBarDetail);
+        contentLayout = findViewById(R.id.contentLayout);
+
+        btnVoltar = findViewById(R.id.btnVoltar);
+        btnEditar = findViewById(R.id.btnEditar);
+        btnExcluir = findViewById(R.id.btnExcluir); // Vincula o botão
+    }
+
+    private void confirmarExclusao() {
+        new AlertDialog.Builder(this)
+                .setTitle("Excluir Registro")
+                .setMessage("Tem certeza que deseja excluir este desaparecido? Essa ação não pode ser desfeita.")
+                .setPositiveButton("Sim, Excluir", (dialog, which) -> deletarDoFirebase())
+                .setNegativeButton("Cancelar", null) // Fecha o diálogo sem fazer nada
+                .show();
+    }
+
+    private void deletarDoFirebase() {
+        progressBar.setVisibility(View.VISIBLE);
+        contentLayout.setVisibility(View.GONE); // Esconde os dados enquanto deleta
+
+        db.collection("desaparecidos").document(casoId)
+                .delete()
+                .addOnSuccessListener(aVoid -> {
+                    progressBar.setVisibility(View.GONE);
+                    Toast.makeText(this, "Registro excluído com sucesso.", Toast.LENGTH_SHORT).show();
+                    finish(); // Fecha a tela e volta para a lista
+                })
+                .addOnFailureListener(e -> {
+                    progressBar.setVisibility(View.GONE);
+                    contentLayout.setVisibility(View.VISIBLE); // Mostra os dados de volta se der erro
+                    Toast.makeText(this, "Erro ao excluir: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                });
     }
 
     private void carregarDadosDoCaso(String casoId) {
         db.collection("desaparecidos").document(casoId).get()
                 .addOnSuccessListener(documentSnapshot -> {
+                    progressBar.setVisibility(View.GONE);
+                    if (contentLayout != null) contentLayout.setVisibility(View.VISIBLE);
+
                     if (documentSnapshot.exists()) {
                         Caso caso = documentSnapshot.toObject(Caso.class);
                         if (caso != null) {
-                            textViewNome.setText(caso.getNomeCompleto());
-                            textViewStatus.setText(caso.getEstado_desaparecimento());
-
+                            preencherCabecalho(caso);
                             popularSecaoDadosPessoais(caso);
                             popularSecaoDadosOcorrencia(caso);
                             popularSecaoComunicante(caso);
                             popularSecaoAlertas(caso);
                         }
                     } else {
-                        Toast.makeText(this, "Caso não encontrado.", Toast.LENGTH_LONG).show();
+                        Toast.makeText(this, "Caso não encontrado (pode ter sido excluído).", Toast.LENGTH_SHORT).show();
+                        finish();
                     }
                 })
                 .addOnFailureListener(e -> {
-                    Toast.makeText(this, "Erro ao carregar dados: " + e.getMessage(), Toast.LENGTH_LONG).show();
-                    Log.e("Firestore", "Erro ao buscar documento", e);
+                    progressBar.setVisibility(View.GONE);
+                    Toast.makeText(this, "Erro ao carregar: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                 });
     }
+
+    private void preencherCabecalho(Caso caso) {
+        tvNome.setText(caso.getNomeCompleto());
+        tvStatus.setText(caso.getEstado_desaparecimento());
+
+        List<String> fotos = caso.getFotos();
+        if (fotos != null && !fotos.isEmpty()) {
+            String urlFoto = fotos.get(0);
+            Glide.with(this)
+                    .load(urlFoto)
+                    .placeholder(R.drawable.ic_placeholder_person)
+                    .error(R.drawable.ic_placeholder_person)
+                    .circleCrop()
+                    .into(imgFoto);
+        } else {
+            imgFoto.setImageResource(R.drawable.ic_placeholder_person);
+        }
+    }
+
+    // --- MÉTODOS DE POPULAR SEÇÕES ---
 
     private void popularSecaoDadosPessoais(Caso caso) {
         TextView titulo = secaoDadosPessoais.findViewById(R.id.tvTitulo);
@@ -74,38 +172,26 @@ public class CaseDetailActivity extends AppCompatActivity {
 
         titulo.setText("Dados Pessoais");
         container.removeAllViews();
-        adicionarCampo(container, "Nome completo:", caso.getNomeCompleto());
-        adicionarCampo(container, "Data de nascimento:", caso.getDataNascimento());
-        adicionarCampo(container, "Sexo:", caso.getSexo());
-        adicionarCampo(container, "CPF:", caso.getCpf());
-        adicionarCampo(container, "RG:", caso.getRg());
-        adicionarCampo(container, "Órgão expedidor:", caso.getOrgaoExpedidor());
-        adicionarCampo(container, "Nome do pai:", caso.getNomePai());
-        adicionarCampo(container, "Nome da mãe:", caso.getNomeMae());
-        adicionarCampo(container, "Idade à época:", String.valueOf(caso.getIdadeEpoca()));
-        adicionarSubtitulo(container, "Informações adicionais");
-        adicionarInfoAdicional(container, "É pessoa com doença mental", caso.isDoenca_mental());
-        adicionarInfoAdicional(container, "Usava telefone celular quando desapareceu", caso.isUsavaTelefone());
-        adicionarInfoAdicional(container, "Dirigia algum veículo quando desapareceu", caso.isDirigia_veiculo());
-        if (caso.isDirigia_veiculo()) {
-            adicionarCampo(container, "   Placa:", caso.getPlaca_veiculo() + " - Modelo: " + caso.getModelo_veiculo());
-        }
-        adicionarInfoAdicional(container, "Possui perfil em redes sociais", caso.isPerfil_redes());
+
+        adicionarCampo(container, "Nome Completo", caso.getNomeCompleto());
+        adicionarCampo(container, "Data Nascimento", caso.getDataNascimento());
+        adicionarCampo(container, "Idade à época", String.valueOf(caso.getIdadeEpoca()));
+        adicionarCampo(container, "CPF", caso.getCpf());
+        adicionarCampo(container, "RG", caso.getRg());
+        adicionarCampo(container, "Sexo", caso.getSexo());
+
+        adicionarSubtitulo(container, "Físico");
+        adicionarCampo(container, "Altura", caso.getAltura() > 0 ? caso.getAltura() + " cm" : "-");
+        adicionarCampo(container, "Pele", caso.getCorPele());
+        adicionarCampo(container, "Cabelo", caso.getCorCabelo() + " (" + caso.getTipoCabelo() + ")");
+        adicionarCampo(container, "Olhos", caso.getCorOlhos());
+        adicionarCampo(container, "Sinais", caso.getSinaisParticulares());
+
         adicionarSubtitulo(container, "Endereço Residencial");
-        adicionarCampo(container, "Logradouro:", caso.getLogradouro());
-        adicionarCampo(container, "Estado:", caso.getEstado());
-        adicionarCampo(container, "Município:", caso.getMunicipio());
-        adicionarCampo(container, "Bairro:", caso.getBairro());
-        adicionarCampo(container, "Número:", String.valueOf(caso.getNumero()));
-        adicionarSubtitulo(container, "Características da Vítima");
-        adicionarCampo(container, "Cor da pele:", caso.getCorPele());
-        adicionarCampo(container, "Cor dos olhos:", caso.getCorOlhos());
-        adicionarCampo(container, "Altura:", String.valueOf(caso.getAltura()));
-        adicionarCampo(container, "Sinais particulares:", caso.getSinaisParticulares());
-        adicionarCampo(container, "Tipo de cabelo:", caso.getTipoCabelo());
-        adicionarCampo(container, "Cor de cabelo:", caso.getCorCabelo());
-        adicionarCampo(container, "Vestimenta:", caso.getVestimenta());
-        adicionarCampo(container, "Objetos:", caso.getObjetos());
+        adicionarCampo(container, "Logradouro", caso.getLogradouro());
+        adicionarCampo(container, "Bairro", caso.getBairro());
+        adicionarCampo(container, "Município/UF", caso.getMunicipio() + " - " + caso.getEstado());
+
         configurarCliqueSecao(header, container);
     }
 
@@ -116,16 +202,20 @@ public class CaseDetailActivity extends AppCompatActivity {
 
         titulo.setText("Dados da Ocorrência");
         container.removeAllViews();
-        adicionarCampo(container, "Número do B.O.:", String.valueOf(caso.getNumeroBO()));
-        adicionarCampo(container, "Data do registro:", caso.getDataRegistro());
-        adicionarCampo(container, "Data do desaparecimento:", caso.getDataDesaparecimento());
-        adicionarCampo(container, "Delegacia do registro:", caso.getDelegaciaRegistro());
-        adicionarSubtitulo(container, "Local do desaparecimento");
-        adicionarCampo(container, "Logradouro:", caso.getLogradouro_desaparecimento());
-        adicionarCampo(container, "Estado:", caso.getEstado_desaparecimento());
-        adicionarCampo(container, "Município:", caso.getMunicipio_desaparecimento());
-        adicionarCampo(container, "Bairro:", caso.getBairro_desaparecimento());
-        adicionarCampo(container, "Número:", String.valueOf(caso.getNumero_desaparecimento()));
+
+        adicionarCampo(container, "Data Desaparecimento", caso.getDataDesaparecimento());
+        adicionarCampo(container, "Data Registro", caso.getDataRegistro());
+        adicionarCampo(container, "B.O.", caso.getNumeroBO());
+
+        adicionarSubtitulo(container, "Local do Fato");
+        adicionarCampo(container, "Logradouro", caso.getLogradouro_desaparecimento());
+        adicionarCampo(container, "Bairro", caso.getBairro_desaparecimento());
+        adicionarCampo(container, "Município/UF", caso.getMunicipio_desaparecimento() + " - " + caso.getEstado_desaparecimento());
+
+        adicionarSubtitulo(container, "Outros");
+        adicionarCampo(container, "Vestimenta", caso.getVestimenta());
+        adicionarCampo(container, "Objetos", caso.getObjetos());
+
         configurarCliqueSecao(header, container);
     }
 
@@ -136,46 +226,29 @@ public class CaseDetailActivity extends AppCompatActivity {
 
         titulo.setText("Dados do Comunicante");
         container.removeAllViews();
-        String comunicanteId = caso.getId_comunicante();
-        if (comunicanteId == null || comunicanteId.trim().isEmpty()) {
-            adicionarCampo(container, "Informação:", "Nenhum comunicante vinculado a este caso.");
-            configurarCliqueSecao(header, container);
-            return;
-        }
-        adicionarCampo(container, "Carregando dados...", "");
-        db.collection("comunicante").document(comunicanteId).get()
-                .addOnSuccessListener(documentSnapshot -> {
-                    container.removeAllViews();
-                    if (documentSnapshot.exists()) {
-                        Comunicante comunicante = documentSnapshot.toObject(Comunicante.class);
-                        if (comunicante != null) {
-                            adicionarCampo(container, "Nome completo:", comunicante.getNomeCompleto());
-                            adicionarCampo(container, "Data de nascimento:", comunicante.getDataNascimento());
-                            adicionarCampo(container, "Sexo:", comunicante.getSexo());
-                            adicionarCampo(container, "CPF:", comunicante.getCpf());
-                            adicionarCampo(container, "RG:", comunicante.getRg());
-                            adicionarCampo(container, "Órgão expedidor:", comunicante.getOrgaoExpedidor());
-                            adicionarCampo(container, "Nome do pai:", comunicante.getNomePai());
-                            adicionarCampo(container, "Nome da mãe:", comunicante.getNomeMae());
-                            adicionarSubtitulo(container, "Telefone para contato");
-                            adicionarCampo(container, "Celular:", comunicante.getCelular());
-                            adicionarCampo(container, "Email para contato:", comunicante.getEmail());
-                            adicionarSubtitulo(container, "Endereço Residencial");
-                            adicionarCampo(container, "Logradouro:", comunicante.getLogradouro());
-                            adicionarCampo(container, "Estado:", comunicante.getEstado());
-                            adicionarCampo(container, "Município:", comunicante.getMunicipio());
-                            adicionarCampo(container, "Bairro:", comunicante.getBairro());
-                            adicionarCampo(container, "Número:", comunicante.getNumero());
+
+        String idComunicante = caso.getId_comunicante();
+        if (idComunicante == null || idComunicante.isEmpty()) {
+            adicionarCampo(container, "Status", "Não informado.");
+        } else {
+            db.collection("comunicante").document(idComunicante).get()
+                    .addOnSuccessListener(doc -> {
+                        container.removeAllViews();
+                        if (doc.exists()) {
+                            Comunicante com = doc.toObject(Comunicante.class);
+                            if (com != null) {
+                                adicionarCampo(container, "Nome", com.getNomeCompleto());
+                                adicionarCampo(container, "Celular", com.getCelular());
+                                adicionarCampo(container, "Telefone", com.getTelefone());
+                                adicionarCampo(container, "Email", com.getEmail());
+                                adicionarCampo(container, "Endereço", com.getLogradouro() + ", " + com.getNumero());
+                            }
+                        } else {
+                            adicionarCampo(container, "Erro", "Comunicante não encontrado.");
                         }
-                    } else {
-                        adicionarCampo(container, "Aviso:", "Comunicante com ID " + comunicanteId + " não encontrado.");
-                    }
-                })
-                .addOnFailureListener(e -> {
-                    container.removeAllViews();
-                    adicionarCampo(container, "Erro:", "Falha ao carregar dados do comunicante.");
-                    Log.e("Firestore", "Erro ao buscar comunicante", e);
-                });
+                    });
+            adicionarCampo(container, "Aguarde", "Carregando dados...");
+        }
         configurarCliqueSecao(header, container);
     }
 
@@ -186,50 +259,45 @@ public class CaseDetailActivity extends AppCompatActivity {
 
         titulo.setText("Alertas Emitidos");
         container.removeAllViews();
-        adicionarCampo(container, "Status:", "Nenhum alerta emitido no momento.");
+        adicionarCampo(container, "Status", "Nenhum alerta emitido.");
         configurarCliqueSecao(header, container);
     }
 
+    // --- MÉTODOS AUXILIARES DE UI ---
+
     private void adicionarCampo(LinearLayout container, String rotulo, String valor) {
-        if (valor == null || valor.trim().isEmpty() || valor.equals("0")) {
-            return;
-        }
+        if (valor == null || valor.trim().isEmpty() || valor.equals("0") || valor.equals("-")) return;
+
         View view = getLayoutInflater().inflate(R.layout.include_edit_group, container, false);
-        ((TextView) view.findViewById(R.id.edit_group_title)).setText(rotulo);
-        ((TextView) view.findViewById(R.id.edit_group_value)).setText(valor);
+
+        TextView tvLabel = view.findViewById(R.id.edit_group_title);
+        TextView tvValue = view.findViewById(R.id.edit_group_value);
+
+        tvLabel.setText(rotulo);
+        tvValue.setText(valor);
+
         container.addView(view);
     }
 
-    private void adicionarSubtitulo(LinearLayout container, String titulo) {
-        TextView tvSubtitulo = new TextView(this);
-        tvSubtitulo.setText(titulo);
-
-        // --- CORREÇÃO ---
-        tvSubtitulo.setTextAppearance(android.R.style.TextAppearance_Large);
-
-        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-        params.setMargins(0, 24, 0, 8);
-        tvSubtitulo.setLayoutParams(params);
-        container.addView(tvSubtitulo);
-    }
-
-    private void adicionarInfoAdicional(LinearLayout container, String texto, boolean isChecked) {
-        TextView tvInfo = new TextView(this);
-        tvInfo.setText(texto);
-
-        // --- CORREÇÃO 2: Removido o 'this,' ---
-        tvInfo.setTextAppearance(androidx.appcompat.R.style.TextAppearance_AppCompat_Medium);
-
-        int icon = isChecked ? R.drawable.ic_checkbox_on : R.drawable.ic_checkbox_off;
-        tvInfo.setCompoundDrawablesWithIntrinsicBounds(icon, 0, 0, 0);
-        tvInfo.setCompoundDrawablePadding(16);
-        container.addView(tvInfo);
+    private void adicionarSubtitulo(LinearLayout container, String texto) {
+        TextView tv = new TextView(this);
+        tv.setText(texto);
+        tv.setTextSize(14);
+        tv.setTypeface(null, android.graphics.Typeface.BOLD);
+        tv.setPadding(0, 24, 0, 8);
+        tv.setTextColor(getResources().getColor(R.color.purple_500));
+        container.addView(tv);
     }
 
     private void configurarCliqueSecao(View header, View container) {
         header.setOnClickListener(v -> {
-            container.setVisibility(container.getVisibility() == View.GONE ? View.VISIBLE : View.GONE);
+            boolean isVisible = container.getVisibility() == View.VISIBLE;
+            container.setVisibility(isVisible ? View.GONE : View.VISIBLE);
+
+            ImageView arrow = header.findViewById(R.id.ivArrow);
+            if (arrow != null) {
+                arrow.animate().rotation(isVisible ? 0 : 180).setDuration(200).start();
+            }
         });
     }
 }
