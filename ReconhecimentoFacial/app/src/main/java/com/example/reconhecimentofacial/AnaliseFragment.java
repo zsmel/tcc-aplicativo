@@ -9,7 +9,6 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ImageButton;
-import android.widget.ProgressBar;
 import android.widget.RadioGroup;
 import android.widget.Spinner;
 import android.widget.TextView;
@@ -35,7 +34,7 @@ public class AnaliseFragment extends Fragment {
     private Spinner spAno, spMes;
     private RadioGroup rgSituacao;
     private TextView tvTotalSelecionado, tvTituloRegiao, tvTituloSexo, tvTituloIdade, tvLinkSite;
-    private ImageButton btnAtualizar; // NOVO BOTÃO
+    private ImageButton btnAtualizar;
     private DecimalFormat decimalFormat;
     private int[] chartColors;
     private FirebaseFirestore db;
@@ -62,7 +61,7 @@ public class AnaliseFragment extends Fragment {
         spAno     = v.findViewById(R.id.spAno);
         spMes     = v.findViewById(R.id.spMes);
         rgSituacao= v.findViewById(R.id.rgSituacao);
-        btnAtualizar = v.findViewById(R.id.btnAtualizarAnalise); // VINCULADO
+        btnAtualizar = v.findViewById(R.id.btnAtualizarAnalise);
 
         tvTotalSelecionado = v.findViewById(R.id.tvTotalSelecionado);
         tvTituloRegiao = v.findViewById(R.id.tvTituloRegiao);
@@ -92,7 +91,6 @@ public class AnaliseFragment extends Fragment {
             startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url)));
         });
 
-        // AÇÃO DO BOTÃO ATUALIZAR
         btnAtualizar.setOnClickListener(view -> {
             Toast.makeText(getContext(), "Atualizando gráficos...", Toast.LENGTH_SHORT).show();
             renderAll();
@@ -161,10 +159,11 @@ public class AnaliseFragment extends Fragment {
                 try {
                     String idadeStr = caso.getIdadeEpoca();
                     if (idadeStr != null && !idadeStr.isEmpty()) {
-                        idade = Integer.parseInt(idadeStr);
+                        // Se houver espaços, remove. Ex: "25 " -> "25"
+                        idade = Integer.parseInt(idadeStr.trim());
                     }
                 } catch (NumberFormatException e) {
-                    idade = 0;
+                    idade = 0; // Se não for número, conta como 0
                 }
 
                 if(idade <= 17) contIdade.put("0 a 17 anos", contIdade.get("0 a 17 anos")+1);
@@ -220,6 +219,7 @@ public class AnaliseFragment extends Fragment {
         if (dadosDoAno != null) {
             tvTotalSelecionado.setText("Total " + situacaoTexto + " (" + anoSelecionado + "): " + decimalFormat.format(dadosDoAno.getTotal()));
 
+            // Renderiza gráficos estáticos
             Map<String, Integer> dadosRegiao = dadosDoAno.getPorRegiao();
             colRegiao.setData(new float[]{dadosRegiao.get("Norte"), dadosRegiao.get("Nordeste"), dadosRegiao.get("Centro-O."), dadosRegiao.get("Sudeste"), dadosRegiao.get("Sul")},
                     new String[]{"Norte", "Nordeste", "Centro", "Sudeste", "Sul"}, chartColors);
