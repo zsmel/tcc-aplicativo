@@ -1,6 +1,7 @@
 package com.example.reconhecimentofacial;
 
 import android.graphics.Bitmap;
+import android.graphics.Matrix;
 import android.graphics.Rect;
 import android.os.Bundle;
 import android.util.Size;
@@ -8,6 +9,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -44,7 +46,8 @@ public class MonitoramentoFragment extends Fragment {
     private PreviewView previewView;
     private FaceOverlayView faceOverlayView;
 
-    private static final float THRESHOLD = 1.0f; // distância Euclidiana limite para correspondência
+    // Realistic threshold for MobileFaceNet L2 distance
+    private static final float THRESHOLD = 1.3f;
 
     @Nullable
     @Override
@@ -70,6 +73,7 @@ public class MonitoramentoFragment extends Fragment {
                         .build();
         faceDetector = FaceDetection.getClient(options);
 
+        // Load stored embedding (must match preprocessing and L2-normalized)
         storedEmbedding = FaceUtils.loadStoredEmbedding(requireContext(), "my_embedding.json");
 
         try {
@@ -119,7 +123,13 @@ public class MonitoramentoFragment extends Fragment {
 
     private void analyzeImage(ImageProxy imageProxy) {
         Bitmap bitmap = FaceUtils.imageProxyToBitmap(imageProxy);
-        bitmap = FaceUtils.rotateBitmap(bitmap, 270); // ajuste conforme orientação da câmera
+
+        // Rotate according to camera
+        int rotation = imageProxy.getImageInfo().getRotationDegrees();
+        bitmap = FaceUtils.rotateBitmap(bitmap, rotation);
+
+        // Mirror front camera
+        bitmap = mirrorBitmap(bitmap);
 
         InputImage inputImage = InputImage.fromBitmap(bitmap, 0);
 
@@ -130,6 +140,13 @@ public class MonitoramentoFragment extends Fragment {
                 .addOnCompleteListener(task -> imageProxy.close());
     }
 
+    // Helper to mirror bitmap horizontally (for front camera)
+    private Bitmap mirrorBitmap(Bitmap bitmap) {
+        Matrix matrix = new Matrix();
+        matrix.preScale(-1, 1);
+        return Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), matrix, true);
+    }
+
     private void handleFaces(List<Face> faces, Bitmap bitmap) {
         List<Rect> mappedRects = new ArrayList<>();
 
@@ -138,20 +155,22 @@ public class MonitoramentoFragment extends Fragment {
             Bitmap faceBitmap = FaceUtils.cropFace(bitmap, boundingBox);
             if (faceBitmap == null) continue;
 
-            // Calcula embedding real da face
+            // Generate embedding (L2-normalized)
             float[] faceEmbedding = embeddingExtractor.ccgetEmbedding(faceBitmap);
 
-            // Compara com embedding salvo
+            // Compare with stored embedding
             float distance = FaceEmbeddingExtractor.euclideanDistance(faceEmbedding, storedEmbedding);
             boolean match = distance < THRESHOLD;
 
-            if (match) {
-                Toast.makeText(requireContext(), "Rosto reconhecido!", Toast.LENGTH_SHORT).show();
-            } else {
-                Toast.makeText(requireContext(), "Rosto não reconhecido", Toast.LENGTH_SHORT).show();
-            }
+            String message = match
+                    ? "Rosto reconhecido! Distância = " + String.format("%.3f", distance)
+                    : "Rosto não reconhecido. Distância = " + String.format("%.3f", distance);
 
-            // Mapeia bounding box para overlay
+            Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show();
+            Log.d("FACE_RECOGNITION", (match ? "MATCH ✔" : "NO MATCH ✘") + " | Distance = " + distance);
+
+
+            // Map bounding box to overlay
             Rect mapped = FaceUtils.mapRectToPreview(
                     boundingBox,
                     bitmap.getWidth(),
