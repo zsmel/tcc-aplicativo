@@ -31,7 +31,7 @@ public class FaceEmbeddingExtractor {
     }
 
     public float[] ccgetEmbedding(Bitmap bitmap) {
-        // Resize if needed
+        // Resize
         Bitmap resized = Bitmap.createScaledBitmap(bitmap, 112, 112, true);
 
         // Preprocess: normalize to [-1, 1]
@@ -52,9 +52,24 @@ public class FaceEmbeddingExtractor {
             }
         }
 
+        // Duplicate to batch of 2
+        input[1] = input[0];
+
         float[][] output = new float[2][192];
         interpreter.run(input, output);
-        return output[0]; // embedding vector (192D)
+
+        // Normalize embedding
+        float[] embedding = output[0];
+        return l2Normalize(embedding);
+    }
+
+    private float[] l2Normalize(float[] embedding) {
+        float sum = 0f;
+        for (float v : embedding) sum += v * v;
+        float norm = (float) Math.sqrt(sum);
+        float[] normalized = new float[embedding.length];
+        for (int i = 0; i < embedding.length; i++) normalized[i] = embedding[i] / norm;
+        return normalized;
     }
 
     public static float euclideanDistance(float[] a, float[] b) {
@@ -67,6 +82,4 @@ public class FaceEmbeddingExtractor {
         }
         return (float) Math.sqrt(sum);
     }
-
-
 }
