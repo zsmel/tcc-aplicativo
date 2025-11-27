@@ -3,13 +3,17 @@ package com.example.reconhecimentofacial;
 import android.graphics.Bitmap;
 import android.graphics.Matrix;
 import android.graphics.Rect;
+import android.location.Address;
+import android.location.Geocoder;
+import android.location.Location;
+import android.os.Build;
 import android.os.Bundle;
+import android.util.Log;
 import android.util.Size;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
-import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -23,6 +27,7 @@ import androidx.fragment.app.Fragment;
 import androidx.camera.view.PreviewView;
 
 import com.google.common.util.concurrent.ListenableFuture;
+import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.mlkit.vision.common.InputImage;
 import com.google.mlkit.vision.face.Face;
 import com.google.mlkit.vision.face.FaceDetection;
@@ -30,8 +35,10 @@ import com.google.mlkit.vision.face.FaceDetector;
 import com.google.mlkit.vision.face.FaceDetectorOptions;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -47,9 +54,11 @@ public class MonitoramentoFragment extends Fragment {
     private PreviewView previewView;
     private FaceOverlayView faceOverlayView;
 
-    private static final float THRESHOLD = 1.0f; // adjust as needed
+    private FirebaseFirestore db;
 
-    // Inner class to store label + embedding
+    private static final float THRESHOLD = 1.0f; // Ajuste conforme necessário
+
+    // Inner class para armazenar label + embedding
     public static class PersonEmbedding {
         public String label;
         public float[] embedding;
@@ -75,6 +84,7 @@ public class MonitoramentoFragment extends Fragment {
         faceOverlayView = view.findViewById(R.id.faceOverlay);
 
         cameraExecutor = Executors.newSingleThreadExecutor();
+        db = FirebaseFirestore.getInstance();
 
         FaceDetectorOptions options =
                 new FaceDetectorOptions.Builder()
@@ -84,7 +94,7 @@ public class MonitoramentoFragment extends Fragment {
                         .build();
         faceDetector = FaceDetection.getClient(options);
 
-        // Load all embeddings with labels
+        // Carrega embeddings com labels
         storedEmbeddings = FaceUtils.loadAllEmbeddingsWithLabels(requireContext());
 
         try {
@@ -178,11 +188,14 @@ public class MonitoramentoFragment extends Fragment {
             }
 
             boolean match = bestDistance < THRESHOLD;
-            String msg = match
-                    ? "MATCH ✔ " + bestLabel + " (" + bestDistance + ")"
-                    : "NO MATCH ✘ (" + bestDistance + ")";
-            Log.d("FACE_RECOGNITION", msg);
-            Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show();
+            if (match) {
+                String msg = "MATCH ✔ " + bestLabel + " (" + bestDistance + ")";
+                Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show();
+                Log.d("FACE_RECOGNITION", msg);
+
+                // Salva alerta no Firestore com cidade
+                saveAlertToFirestore(bestLabel, bestDistance, null); // imageUrl = null por enquanto
+            }
 
             Rect mapped = FaceUtils.mapRectToPreview(
                     box,
@@ -197,6 +210,24 @@ public class MonitoramentoFragment extends Fragment {
         }
 
         faceOverlayView.setFaces(mappedRects);
+    }
+
+    private void saveAlertToFirestore(String label, float distance, String imageUrl) {
+        Alerta alerta = new Alerta();
+        alerta.setVitimaNome(label);
+        alerta.setPorcentagem(String.format("%.2f", (1 - distance) * 100));
+        alerta.setLocalizacao("Cidade Desconhecida"); // Placeholder (pode integrar GPS real)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            alerta.setDataEmissao(LocalDateTime.now().toString());
+        }
+        alerta.setStatus("Novo");
+        alerta.setFotoDesaparecido(imageUrl);
+        alerta.setDesaparecidoID(label);
+
+        db.collection("alertas")
+                .add(alerta)
+                .addOnSuccessListener(docRef -> Log.d("ALERT", "Alerta salvo: " + docRef.getId()))
+                .addOnFailureListener(Throwable::printStackTrace);
     }
 
     @Override

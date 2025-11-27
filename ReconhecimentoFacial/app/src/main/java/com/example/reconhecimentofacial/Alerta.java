@@ -3,29 +3,25 @@ package com.example.reconhecimentofacial;
 import com.google.firebase.firestore.PropertyName;
 
 public class Alerta {
+
     private String id;
+    private String porcentagem;
+    private String localizacao;
+    private String dataEmissao;
+    private String vitimaNome;
+    private int vitimaIdade;
+    private String status;
+    private String fotoDesaparecido;
+    private String desaparecidoID;
 
-    // Campos com nomes exatos do Firebase
-    private String porcentagem;      // Firebase: "porcentagem"
-    private String localizacao;      // Firebase: "localizacao" (já estava certo)
-    private String dataEmissao;      // Firebase: "dataEmissao"
-    private String vitimaNome;       // Firebase: "vitimaNome"
-    private int vitimaIdade;         // Firebase: "vitimaIdade"
-    private String status;           // Firebase: "status"
-    private String fotoDesaparecido; // Firebase: "fotoDesaparecido"
-    private String desaparecidoID;   // Firebase: "desaparecidoID"
+    public Alerta() {} // Required for Firestore
 
-    public Alerta() {} // Construtor vazio obrigatório
-
-    // Getters e Setters
+    // Getters and setters
     public String getId() { return id; }
     public void setId(String id) { this.id = id; }
 
-    // --- Mapeamento Correto ---
-
     public String getPorcentagem() { return porcentagem; }
     public void setPorcentagem(Object porcentagem) {
-        // Aceita String ou Number e converte para String
         this.porcentagem = String.valueOf(porcentagem);
     }
 

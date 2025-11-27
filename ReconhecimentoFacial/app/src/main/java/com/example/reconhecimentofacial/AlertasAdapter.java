@@ -18,8 +18,8 @@ import java.util.List;
 
 public class AlertasAdapter extends RecyclerView.Adapter<AlertasAdapter.ViewHolder> {
 
-    private Context context;
-    private List<Alerta> listaAlertas;
+    private final Context context;
+    private final List<Alerta> listaAlertas;
 
     public AlertasAdapter(Context context, List<Alerta> listaAlertas) {
         this.context = context;
@@ -37,9 +37,7 @@ public class AlertasAdapter extends RecyclerView.Adapter<AlertasAdapter.ViewHold
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         Alerta alerta = listaAlertas.get(position);
 
-        // --- Usando os Getters atualizados ---
         String porc = alerta.getPorcentagem() != null ? alerta.getPorcentagem() : "?";
-        // Se vier só número (ex: 81), adiciona o %
         if (!porc.contains("%")) porc += "%";
 
         String header = porc + " | " + (alerta.getLocalizacao() != null ? alerta.getLocalizacao() : "Local Desconhecido");
@@ -49,7 +47,6 @@ public class AlertasAdapter extends RecyclerView.Adapter<AlertasAdapter.ViewHold
         holder.tvVitima.setText("Vítima: " + alerta.getVitimaNome() + ", " + alerta.getVitimaIdade() + " anos");
         holder.tvStatus.setText("Status: " + alerta.getStatus());
 
-        // Carrega foto
         String urlFoto = alerta.getFotoDesaparecido();
         if (urlFoto != null && !urlFoto.isEmpty()) {
             Glide.with(context)
@@ -61,7 +58,6 @@ public class AlertasAdapter extends RecyclerView.Adapter<AlertasAdapter.ViewHold
             holder.ivFoto.setImageResource(R.drawable.ic_placeholder_person);
         }
 
-        // Botão Detalhes
         holder.btnDetalhes.setOnClickListener(v -> {
             String idOriginal = alerta.getDesaparecidoID();
             if (idOriginal != null && !idOriginal.isEmpty()) {
@@ -77,7 +73,6 @@ public class AlertasAdapter extends RecyclerView.Adapter<AlertasAdapter.ViewHold
         return listaAlertas != null ? listaAlertas.size() : 0;
     }
 
-    // --- CLASSE VIEWHOLDER (Importante para definir os IDs) ---
     public static class ViewHolder extends RecyclerView.ViewHolder {
         TextView tvHeader, tvData, tvVitima, tvStatus;
         ImageView ivFoto;
@@ -85,7 +80,6 @@ public class AlertasAdapter extends RecyclerView.Adapter<AlertasAdapter.ViewHold
 
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
-            // Vincula com os IDs do arquivo item_alerta.xml
             tvHeader = itemView.findViewById(R.id.tvAlertaHeader);
             tvData = itemView.findViewById(R.id.tvAlertaData);
             tvVitima = itemView.findViewById(R.id.tvAlertaVitima);
