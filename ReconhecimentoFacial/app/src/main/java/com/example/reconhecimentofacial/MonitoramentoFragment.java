@@ -8,6 +8,7 @@ import android.util.Size;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.Toast;
 import android.util.Log;
 
@@ -47,9 +48,13 @@ public class MonitoramentoFragment extends Fragment {
     private PreviewView previewView;
     private FaceOverlayView faceOverlayView;
 
-    private static final float THRESHOLD = 1.0f; // adjust as needed
+    // Variáveis para controle manual (Botão)
+    private Button btnAnalisar;
+    private boolean analisarAgora = false;
+    private boolean processando = false;
 
-    // Inner class to store label + embedding
+    private static final float THRESHOLD = 0.8f; // Limiar de similaridade
+
     public static class PersonEmbedding {
         public String label;
         public float[] embedding;
@@ -73,26 +78,38 @@ public class MonitoramentoFragment extends Fragment {
 
         previewView = view.findViewById(R.id.previewView);
         faceOverlayView = view.findViewById(R.id.faceOverlay);
+        btnAnalisar = view.findViewById(R.id.btnAnalisar);
 
         cameraExecutor = Executors.newSingleThreadExecutor();
 
+        // Configurações do ML Kit
         FaceDetectorOptions options =
                 new FaceDetectorOptions.Builder()
-                        .setPerformanceMode(FaceDetectorOptions.PERFORMANCE_MODE_FAST)
+                        .setPerformanceMode(FaceDetectorOptions.PERFORMANCE_MODE_ACCURATE)
                         .setLandmarkMode(FaceDetectorOptions.LANDMARK_MODE_NONE)
                         .setClassificationMode(FaceDetectorOptions.CLASSIFICATION_MODE_NONE)
                         .build();
         faceDetector = FaceDetection.getClient(options);
 
-        // Load all embeddings with labels
+        // Carrega embeddings (Base de dados local)
         storedEmbeddings = FaceUtils.loadAllEmbeddingsWithLabels(requireContext());
 
         try {
             embeddingExtractor = new FaceEmbeddingExtractor(requireContext().getAssets());
         } catch (IOException e) {
             e.printStackTrace();
-            Toast.makeText(requireContext(), "Erro ao carregar modelo", Toast.LENGTH_LONG).show();
+            Toast.makeText(requireContext(), "Erro ao carregar modelo TFLite", Toast.LENGTH_LONG).show();
         }
+
+        // Ação do Botão: Inicia a análise de um único frame
+        btnAnalisar.setOnClickListener(v -> {
+            if (!processando) {
+                analisarAgora = true;
+                btnAnalisar.setEnabled(false);
+                btnAnalisar.setText("Processando...");
+                faceOverlayView.setFaces(new ArrayList<>()); // Limpa a tela
+            }
+        });
 
         startCamera();
     }
@@ -134,20 +151,54 @@ public class MonitoramentoFragment extends Fragment {
     }
 
     private void analyzeImage(ImageProxy imageProxy) {
-        Bitmap bitmap = FaceUtils.imageProxyToBitmap(imageProxy);
+        // Se o botão NÃO foi clicado ou já estamos ocupados, descarta o frame imediatamente
+        if (!analisarAgora || processando) {
+            imageProxy.close();
+            return;
+        }
 
+        processando = true;
+        analisarAgora = false; // Desliga o gatilho para não processar o próximo frame automaticamente
+
+        Bitmap bitmap = FaceUtils.imageProxyToBitmap(imageProxy);
         int rotation = imageProxy.getImageInfo().getRotationDegrees();
         bitmap = FaceUtils.rotateBitmap(bitmap, rotation);
-
         bitmap = mirrorBitmap(bitmap);
 
         InputImage inputImage = InputImage.fromBitmap(bitmap, 0);
-
         Bitmap finalBitmap = bitmap;
+
         faceDetector.process(inputImage)
-                .addOnSuccessListener(faces -> handleFaces(faces, finalBitmap))
-                .addOnFailureListener(Throwable::printStackTrace)
-                .addOnCompleteListener(t -> imageProxy.close());
+                .addOnSuccessListener(faces -> {
+                    if (faces.isEmpty()) {
+                        resetarBotaoUI("Nenhum rosto detectado");
+                    } else {
+                        // Processa e obtém a mensagem exata (Match ou No Match)
+                        String resultado = handleFaces(faces, finalBitmap);
+                        resetarBotaoUI(resultado);
+                    }
+                })
+                .addOnFailureListener(e -> {
+                    e.printStackTrace();
+                    resetarBotaoUI("Erro na detecção: " + e.getMessage());
+                })
+                .addOnCompleteListener(t -> {
+                    imageProxy.close();
+                    processando = false;
+                });
+    }
+
+    private void resetarBotaoUI(String mensagem) {
+        if (getActivity() != null) {
+            getActivity().runOnUiThread(() -> {
+                btnAnalisar.setEnabled(true);
+                btnAnalisar.setText("Analisar Rosto");
+                if (mensagem != null) {
+                    // Exibe o resultado específico na tela
+                    Toast.makeText(getContext(), mensagem, Toast.LENGTH_LONG).show();
+                }
+            });
+        }
     }
 
     private Bitmap mirrorBitmap(Bitmap bitmap) {
@@ -156,9 +207,12 @@ public class MonitoramentoFragment extends Fragment {
         return Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), m, true);
     }
 
-    private void handleFaces(List<Face> faces, Bitmap bitmap) {
+    // Modificado para retornar a String de resultado e desenhar o quadrado
+    private String handleFaces(List<Face> faces, Bitmap bitmap) {
         List<Rect> mappedRects = new ArrayList<>();
+        String resultMessage = "Rosto detectado, mas sem correspondência.";
 
+        // Processa os rostos (assume-se 1 rosto principal na self)
         for (Face face : faces) {
             Rect box = face.getBoundingBox();
             Bitmap faceBmp = FaceUtils.cropFace(bitmap, box);
@@ -167,8 +221,9 @@ public class MonitoramentoFragment extends Fragment {
             float[] emb = embeddingExtractor.ccgetEmbedding(faceBmp);
 
             float bestDistance = Float.MAX_VALUE;
-            String bestLabel = "Unknown";
+            String bestLabel = "Desconhecido";
 
+            // Compara com os embeddings salvos (Local ou Firebase futuramente)
             for (PersonEmbedding stored : storedEmbeddings) {
                 float dist = FaceEmbeddingExtractor.euclideanDistance(emb, stored.embedding);
                 if (dist < bestDistance) {
@@ -177,13 +232,19 @@ public class MonitoramentoFragment extends Fragment {
                 }
             }
 
+            // Verifica se deu Match baseado no limiar
             boolean match = bestDistance < THRESHOLD;
-            String msg = match
-                    ? "MATCH ✔ " + bestLabel + " (" + bestDistance + ")"
-                    : "NO MATCH ✘ (" + bestDistance + ")";
-            Log.d("FACE_RECOGNITION", msg);
-            Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show();
 
+            // Define a mensagem final que o usuário quer ver
+            if (match) {
+                resultMessage = "MATCH ✔ " + bestLabel + String.format(" (%.2f)", bestDistance);
+            } else {
+                resultMessage = "NO MATCH ✘ (" + String.format("%.2f", bestDistance) + ")";
+            }
+
+            Log.d("FACE_RECOGNITION", resultMessage);
+
+            // Desenha o quadrado na tela para feedback visual
             Rect mapped = FaceUtils.mapRectToPreview(
                     box,
                     bitmap.getWidth(),
@@ -192,17 +253,21 @@ public class MonitoramentoFragment extends Fragment {
                     faceOverlayView.getHeight(),
                     true
             );
-
             mappedRects.add(mapped);
         }
 
+        // Atualiza o desenho na tela
         faceOverlayView.setFaces(mappedRects);
+
+        // Retorna a mensagem para ser exibida no Toast
+        return resultMessage;
     }
 
     @Override
     public void onDestroyView() {
         super.onDestroyView();
-        cameraExecutor.shutdown();
-        faceDetector.close();
+        if (cameraExecutor != null) {
+            cameraExecutor.shutdown();
+        }
     }
 }
