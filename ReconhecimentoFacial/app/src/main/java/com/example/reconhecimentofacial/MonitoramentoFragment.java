@@ -47,7 +47,7 @@ public class MonitoramentoFragment extends Fragment {
     private PreviewView previewView;
     private FaceOverlayView faceOverlayView;
 
-    private static final float THRESHOLD = 1.3f; // you can adjust
+    private static final float THRESHOLD = 1.25f; // you can adjust
 
     @Nullable
     @Override
