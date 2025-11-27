@@ -3,16 +3,28 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <!-- Live Camera Preview -->
     <androidx.camera.view.PreviewView
         android:id="@+id/previewView"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 
-    <!-- Face Bounding Box Overlay -->
     <com.example.reconhecimentofacial.FaceOverlayView
         android:id="@+id/faceOverlay"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
+
+    <Button
+        android:id="@+id/btnAnalisar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Analisar Rosto"
+        android:textColor="@android:color/white"
+        android:backgroundTint="@color/purple_500"
+        android:layout_gravity="bottom|center"
+        android:layout_marginBottom="32dp"
+        android:paddingHorizontal="32dp"
+        android:paddingVertical="12dp"
+        android:textSize="16sp"
+        android:textStyle="bold"/>
 
 </FrameLayout>
