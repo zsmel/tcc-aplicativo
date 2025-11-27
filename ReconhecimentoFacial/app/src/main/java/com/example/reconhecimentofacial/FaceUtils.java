@@ -21,6 +21,7 @@ import java.util.List;
 
 public class FaceUtils {
 
+    // Converts ImageProxy to Bitmap
     public static Bitmap imageProxyToBitmap(ImageProxy image) {
         ByteBuffer yBuf = image.getPlanes()[0].getBuffer();
         ByteBuffer uBuf = image.getPlanes()[1].getBuffer();
@@ -54,6 +55,7 @@ public class FaceUtils {
         return BitmapFactory.decodeByteArray(jpeg, 0, jpeg.length);
     }
 
+    // Rotate Bitmap
     public static Bitmap rotateBitmap(Bitmap bmp, int degrees) {
         if (degrees == 0) return bmp;
         Matrix m = new Matrix();
@@ -61,6 +63,7 @@ public class FaceUtils {
         return Bitmap.createBitmap(bmp, 0, 0, bmp.getWidth(), bmp.getHeight(), m, true);
     }
 
+    // Crop a face from Bitmap
     public static Bitmap cropFace(Bitmap src, Rect box) {
         int x = Math.max(box.left, 0);
         int y = Math.max(box.top, 0);
@@ -72,49 +75,7 @@ public class FaceUtils {
         return Bitmap.createBitmap(src, x, y, w, h);
     }
 
-    // Load all embeddings (multiple per person)
-    public static List<float[]> loadAllEmbeddings(Context ctx) {
-        List<float[]> embeddings = new ArrayList<>();
-        try {
-            String[] files = ctx.getAssets().list("embeddings");
-            if (files == null) return embeddings;
-
-            for (String file : files) {
-                if (!file.endsWith(".json")) continue;
-
-                InputStream is = ctx.getAssets().open("embeddings/" + file);
-                byte[] buffer = new byte[is.available()];
-                is.read(buffer);
-                is.close();
-
-                JSONArray arr = new JSONArray(new String(buffer, StandardCharsets.UTF_8));
-
-                // If JSON contains multiple embeddings (array of arrays)
-                if (arr.length() > 0 && arr.get(0) instanceof JSONArray) {
-                    for (int i = 0; i < arr.length(); i++) {
-                        JSONArray inner = arr.getJSONArray(i);
-                        float[] emb = new float[inner.length()];
-                        for (int j = 0; j < inner.length(); j++) {
-                            emb[j] = (float) inner.getDouble(j);
-                        }
-                        embeddings.add(l2Normalize(emb));
-                    }
-                } else {
-                    float[] emb = new float[arr.length()];
-                    for (int j = 0; j < arr.length(); j++) {
-                        emb[j] = (float) arr.getDouble(j);
-                    }
-                    embeddings.add(l2Normalize(emb));
-                }
-            }
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        return embeddings;
-    }
-
+    // L2-normalization
     private static float[] l2Normalize(float[] embedding) {
         float sum = 0f;
         for (float v : embedding) sum += v * v;
@@ -125,6 +86,7 @@ public class FaceUtils {
         return embedding;
     }
 
+    // Map face Rect to overlay preview
     public static Rect mapRectToPreview(Rect rect,
                                         int bitmapWidth, int bitmapHeight,
                                         int viewWidth, int viewHeight,
@@ -149,5 +111,50 @@ public class FaceUtils {
         }
 
         return new Rect(left, top, right, bottom);
+    }
+
+    // Load all embeddings from assets/embeddings and return list of PersonEmbedding
+    public static List<MonitoramentoFragment.PersonEmbedding> loadAllEmbeddingsWithLabels(Context ctx) {
+        List<MonitoramentoFragment.PersonEmbedding> embeddings = new ArrayList<>();
+        try {
+            String[] files = ctx.getAssets().list("embeddings");
+            if (files == null) return embeddings;
+
+            for (String file : files) {
+                if (!file.endsWith(".json")) continue;
+
+                String label = file.replace("_embeddings.json", "");
+
+                InputStream is = ctx.getAssets().open("embeddings/" + file);
+                byte[] buffer = new byte[is.available()];
+                is.read(buffer);
+                is.close();
+
+                JSONArray arr = new JSONArray(new String(buffer, StandardCharsets.UTF_8));
+
+                // If JSON contains multiple embeddings (array of arrays)
+                if (arr.length() > 0 && arr.get(0) instanceof JSONArray) {
+                    for (int i = 0; i < arr.length(); i++) {
+                        JSONArray inner = arr.getJSONArray(i);
+                        float[] emb = new float[inner.length()];
+                        for (int j = 0; j < inner.length(); j++) {
+                            emb[j] = (float) inner.getDouble(j);
+                        }
+                        embeddings.add(new MonitoramentoFragment.PersonEmbedding(label, l2Normalize(emb)));
+                    }
+                } else {
+                    float[] emb = new float[arr.length()];
+                    for (int j = 0; j < arr.length(); j++) {
+                        emb[j] = (float) arr.getDouble(j);
+                    }
+                    embeddings.add(new MonitoramentoFragment.PersonEmbedding(label, l2Normalize(emb)));
+                }
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return embeddings;
     }
 }

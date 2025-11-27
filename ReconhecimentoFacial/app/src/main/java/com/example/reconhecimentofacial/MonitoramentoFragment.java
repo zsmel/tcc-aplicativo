@@ -41,13 +41,24 @@ public class MonitoramentoFragment extends Fragment {
     private ExecutorService cameraExecutor;
     private FaceDetector faceDetector;
 
-    private List<float[]> storedEmbeddings = new ArrayList<>();
+    private List<PersonEmbedding> storedEmbeddings = new ArrayList<>();
     private FaceEmbeddingExtractor embeddingExtractor;
 
     private PreviewView previewView;
     private FaceOverlayView faceOverlayView;
 
-    private static final float THRESHOLD = 1.25f; // you can adjust
+    private static final float THRESHOLD = 1.0f; // adjust as needed
+
+    // Inner class to store label + embedding
+    public static class PersonEmbedding {
+        public String label;
+        public float[] embedding;
+
+        public PersonEmbedding(String label, float[] embedding) {
+            this.label = label;
+            this.embedding = embedding;
+        }
+    }
 
     @Nullable
     @Override
@@ -73,8 +84,8 @@ public class MonitoramentoFragment extends Fragment {
                         .build();
         faceDetector = FaceDetection.getClient(options);
 
-        // Load all embeddings from assets/embeddings/
-        storedEmbeddings = FaceUtils.loadAllEmbeddings(requireContext());
+        // Load all embeddings with labels
+        storedEmbeddings = FaceUtils.loadAllEmbeddingsWithLabels(requireContext());
 
         try {
             embeddingExtractor = new FaceEmbeddingExtractor(requireContext().getAssets());
@@ -146,7 +157,6 @@ public class MonitoramentoFragment extends Fragment {
     }
 
     private void handleFaces(List<Face> faces, Bitmap bitmap) {
-
         List<Rect> mappedRects = new ArrayList<>();
 
         for (Face face : faces) {
@@ -157,18 +167,19 @@ public class MonitoramentoFragment extends Fragment {
             float[] emb = embeddingExtractor.ccgetEmbedding(faceBmp);
 
             float bestDistance = Float.MAX_VALUE;
+            String bestLabel = "Unknown";
 
-            for (float[] stored : storedEmbeddings) {
-                float dist = FaceEmbeddingExtractor.euclideanDistance(emb, stored);
+            for (PersonEmbedding stored : storedEmbeddings) {
+                float dist = FaceEmbeddingExtractor.euclideanDistance(emb, stored.embedding);
                 if (dist < bestDistance) {
                     bestDistance = dist;
+                    bestLabel = stored.label;
                 }
             }
 
             boolean match = bestDistance < THRESHOLD;
-
             String msg = match
-                    ? "MATCH ✔ (" + bestDistance + ")"
+                    ? "MATCH ✔ " + bestLabel + " (" + bestDistance + ")"
                     : "NO MATCH ✘ (" + bestDistance + ")";
             Log.d("FACE_RECOGNITION", msg);
             Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show();
